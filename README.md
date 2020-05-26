@@ -1,6 +1,6 @@
 # neural-network
 
-Example usage of the library :
+## Example usage of the library :
 > neural network to guess if a point is inside a circle or not
 
 ```javascript
@@ -23,19 +23,23 @@ Example usage of the library :
   });
   console.log("results");
   [
-    { x: 0, y: 0 },
-    { x: -0.2, y: 0.34 },
-    { x: -0.002, y: 0.014 },
-    { x: -0.9, y: 0.4 },
-    { x: 0, y: 1 },
-    { x: 1, y: 0 },
-    { x: 2, y: 0 },
-    { x: 3, y: 3 },
-    { x: -40, y: -6 },
-    { x: 53, y: 53 },
+    { x: 0, y: 0 }, // should be in
+    { x: -0.2, y: 0.34 },  // should be in
+    { x: -0.002, y: 0.014 },  // should be in
+    { x: -0.9, y: 0.4 },  // should be ... very close to out
+    { x: 0, y: 1 },  // should be ... very close to out
+    { x: 1, y: 0 },  // should be ... very close to out
+    { x: 2, y: 0 },  // should be out
+    { x: 3, y: 3 },  // should be out
+    { x: -40, y: -6 },  // should be out
+    { x: 53, y: 53 },  // should be out
   ].map((coords) =>
     console.log(
       `${JSON.stringify(coords)} => network : ${network.process(coords)}`,
     )
   );
 ```
+
+## Known issue
+The results, even when activated, are sometimes very far from 1, 
+but there are some noticeable differences between non-activation and activation
