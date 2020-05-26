@@ -21,7 +21,7 @@
         Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [0, 1] : [1, 0],
       }
       // the theory can be replaced with an expectedResults array
-      // if we don't have one
+      // if we don't have one (inputs[k] has for result expectedResults[k])
   });
   console.log("results");
   [
