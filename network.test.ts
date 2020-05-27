@@ -70,11 +70,11 @@ Deno.test("should train and learn with a function", () => {
   }));
 
   const network = new Network({
-    numberByLayer: [3, 2],
-    miniBatchLength: 10,
+    numberByLayer: [1, 1],
+    miniBatchLength: 100,
+    activationFunction: "sigmoid",
+    randomInit: false,
     parameters: [
-      ({ x, y }: { x: number; y: number }) => Math.abs(x),
-      ({ x, y }: { x: number; y: number }) => Math.abs(y),
       ({ x, y }: { x: number; y: number }) => x * x + y * y,
     ],
   });
@@ -82,11 +82,11 @@ Deno.test("should train and learn with a function", () => {
   const trainingResult = network.trainAndGetGradientDescent({
     inputs,
     theory: ({ x, y }: ({ x: number; y: number })) =>
-      Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [0, 1] : [1, 0],
+      Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [0] : [1],
   });
 
   const trainedNetwork = network.apply(trainingResult.weightsAndBiases);
-  /*
+
   console.log("results");
   [
     { x: 0, y: 0 },
@@ -105,7 +105,7 @@ Deno.test("should train and learn with a function", () => {
         network.process(coords)
       }, trained: ${trainedNetwork.process(coords)}`,
     )
-  );*/
+  );
 });
 
 Deno.test("prepared network and trained network", () => {
@@ -166,7 +166,7 @@ Deno.test("prepared network and trained network", () => {
 Deno.test("mixed national institute of standards and technology", async () => {
   const images = await readDatabase();
   const network = new Network<{ label: number; bitmap: number[][] }>({
-    numberByLayer: [784, 30, 15, 10],
+    numberByLayer: [784, 40, 15, 10],
     parameters: Array(784).fill(0).map((_, i) =>
       ({ label, bitmap }) => {
         const column = i % 28;
@@ -179,12 +179,12 @@ Deno.test("mixed national institute of standards and technology", async () => {
     ),
   });
 
-  /*const trainingResult = network.train({
+  const trainingResult = network.costSummaryOf({
     inputs: images?.slice(0, 1) || [],
     theory: ({ label, bitmap }: { label: number; bitmap: number[][] }) => {
       const result = Array(10).fill(0);
       result[label] = 1;
       return result;
     },
-  });*/
+  });
 });

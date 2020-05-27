@@ -1,9 +1,3 @@
-class Neuron {
-  sigmoid(number: number) {
-    return 1 / (1 + Math.exp(-number));
-  }
-}
-
 interface SavedValue {
   neuron: Neuron;
   number: number;
@@ -32,6 +26,25 @@ interface WeightsAndBias {
   weights?: number[];
 }
 
+type ActivationFunction =
+  | "sigmoid"
+  | "rectifiedLinearUnit"
+  | "exponentialLinearUnit";
+
+class Neuron {
+  sigmoid(number: number) {
+    return 1 / (1 + Math.exp(-number));
+  }
+
+  exponentialLinearUnit(number: number) {
+    return number > 0 ? number : 15 * (Math.exp(number) - 1);
+  }
+
+  rectifiedLinearUnit(number: number) {
+    return Math.max(number, 0);
+  }
+}
+
 class InputNeuron<T> extends Neuron {
   execute: (input: T) => number;
   bias: number;
@@ -42,9 +55,9 @@ class InputNeuron<T> extends Neuron {
     this.bias = bias;
   }
 
-  process = (input: T) => {
+  process = (input: T, activationFunction: ActivationFunction) => {
     const combined = this.execute(input);
-    return 1 / (1 + Math.exp(-(combined + this.bias)));
+    return this[activationFunction](combined + this.bias);
   };
 
   copy = (bias?: number) =>
@@ -63,7 +76,7 @@ class HiddenLayerNeuron extends Neuron {
     this.weights = weights;
   }
 
-  compute(input: SavedValue[]) {
+  compute(input: SavedValue[], activationFunction: ActivationFunction) {
     const combined = input.reduce(
       (acc, { neuron, number }) =>
         acc +
@@ -72,10 +85,11 @@ class HiddenLayerNeuron extends Neuron {
             .number),
       0,
     );
-    return 1 / (1 + Math.exp(-(combined + this.bias)));
+    return this[activationFunction](combined + this.bias);
   }
 
-  process = (input: SavedValue[]) => this.compute(input);
+  process = (input: SavedValue[], activationFunction: ActivationFunction) =>
+    this.compute(input, activationFunction);
 
   copy = (weights?: SavedValue[], bias?: number) =>
     new HiddenLayerNeuron(
@@ -98,8 +112,8 @@ class OutputNeuron extends HiddenLayerNeuron {
     this.result = result === undefined ? 0 : result;
   }
 
-  process = (input: SavedValue[]) => {
-    this.result = super.compute(input);
+  process = (input: SavedValue[], activationFunction: ActivationFunction) => {
+    this.result = super.compute(input, activationFunction);
     return this.result;
   };
 
@@ -121,6 +135,7 @@ class OutputNeuron extends HiddenLayerNeuron {
 export class Network<T> {
   private readonly neurons: Neuron[][];
   private readonly name: string;
+  private readonly activationFunction: ActivationFunction;
   private readonly miniBatchLength?: number;
   constructor({
     name,
@@ -129,6 +144,8 @@ export class Network<T> {
     weightsAndBiases,
     trainings,
     miniBatchLength,
+    activationFunction,
+    randomInit,
   }: {
     name?: string;
     numberByLayer: number[];
@@ -136,9 +153,12 @@ export class Network<T> {
     weightsAndBiases?: WeightsAndBias[][];
     trainings?: TrainingDataset<T>;
     miniBatchLength?: number;
+    activationFunction?: ActivationFunction;
+    randomInit?: boolean;
   }) {
     this.name = name || "anonymous network";
     this.miniBatchLength = miniBatchLength;
+    this.activationFunction = activationFunction || "sigmoid";
     this.neurons = numberByLayer.map((n) => Array(n).fill(0));
     this.neurons.forEach((array, i, network) => {
       for (let j = 0; j < array.length; j++) {
@@ -147,29 +167,30 @@ export class Network<T> {
         array[j] = i === 0
           ? new InputNeuron(
             parameters[j],
-            weightsAndBias.bias || Math.random(),
+            weightsAndBias.bias || (randomInit !== false ? Math.random() : 0),
           )
           : i === numberByLayer.length - 1
           ? new OutputNeuron(
             network[i - 1].map((neuron2, k) => ({
               neuron: neuron2,
-              number: (weightsAndBias.weights || [])[k] || Math.random(),
+              number: (weightsAndBias.weights || [])[k] ||
+                (randomInit !== false ? Math.random() : 0),
             })),
-            weightsAndBias.bias || Math.random(),
+            weightsAndBias.bias || (randomInit !== false ? Math.random() : 0),
           )
           : new HiddenLayerNeuron(
             network[i - 1].map((neuron2, k) => ({
               neuron: neuron2,
-              number: (weightsAndBias.weights || [])[k] || Math.random(),
+              number: (weightsAndBias.weights || [])[k] ||
+                (randomInit ? Math.random() : 0),
             })),
-            weightsAndBias.bias || Math.random(),
+            weightsAndBias.bias || (randomInit !== false ? Math.random() : 0),
           );
       }
     });
     if (trainings && trainings.inputs.length) {
-      const weightsAndBiases =
-        this.trainAndGetGradientDescent(this.subsetOf(trainings))
-          .weightsAndBiases;
+      const weightsAndBiases = this.trainAndGetGradientDescent(trainings)
+        .weightsAndBiases;
       const trainedNetwork = this.apply(weightsAndBiases);
       this.neurons.splice(0, this.neurons.length);
       Array.prototype.push.apply(
@@ -184,11 +205,14 @@ export class Network<T> {
       (acc: SavedValue[], layer: Neuron[]) =>
         layer.map((n) => ({
           neuron: n,
-          number: (n as HiddenLayerNeuron).process(acc),
+          number: (n as HiddenLayerNeuron).process(
+            acc,
+            this.activationFunction,
+          ),
         })),
       this.neurons[0].map((n) => ({
         neuron: n,
-        number: (n as InputNeuron<T>).process(input),
+        number: (n as InputNeuron<T>).process(input, this.activationFunction),
       })),
     ).map((savedValue) => (savedValue as SavedValue).number);
 
@@ -215,28 +239,37 @@ export class Network<T> {
   trainAndGetGradientDescent = (
     trainingDataFromInput: TrainingDataset<T>,
   ): TrainingResult<T> => {
-    let i = 0;
-    const trainingDataSubset = this.subsetOf(trainingDataFromInput);
     const clone = this.clone();
-    const weightsAndBiases = clone.neurons.slice().reverse().map((layer) =>
-      layer.map((neuron) => ({
-        weights: neuron instanceof HiddenLayerNeuron
-          ? (neuron as HiddenLayerNeuron).weights.map((weight) =>
-            clone.adjust(
-              weight,
-              "number",
-              () => clone.costSummaryOf(trainingDataSubset).average,
+    const trainingPartitions = this.partitionsOf(trainingDataFromInput);
+    const weightsAndBiases = clone.neurons.slice().reverse().map((layer, i) =>
+      layer.map((neuron, j) => {
+        const iteration = clone.neurons.slice(0, Math.max(i - 1, 0))
+          .reduce((acc, value) => acc + value.length, j);
+        return ({
+          weights: neuron instanceof HiddenLayerNeuron
+            ? (neuron as HiddenLayerNeuron).weights.map((weight) =>
+              clone.adjust(
+                weight,
+                "number",
+                () =>
+                  clone.costSummaryOf(
+                    trainingPartitions[iteration % trainingPartitions.length],
+                  ).average,
+              )
             )
-          )
-          : [],
-        bias: clone.adjust(
-          neuron,
-          "bias",
-          () => clone.costSummaryOf(trainingDataSubset).average,
-        ),
-      }))
+            : [],
+          bias: clone.adjust(
+            neuron,
+            "bias",
+            () =>
+              clone.costSummaryOf(
+                trainingPartitions[iteration % trainingPartitions.length],
+              ).average,
+          ),
+        });
+      })
     ).reverse();
-    const remainingCosts = clone.costSummaryOf(trainingDataSubset);
+    const remainingCosts = clone.costSummaryOf(trainingPartitions[0]);
     return {
       weightsAndBiases,
       remainingCost: remainingCosts.average,
@@ -250,6 +283,8 @@ export class Network<T> {
       name: `trained from '${this.name}'`,
       numberByLayer: this.neurons.map((l) => l.length),
       parameters: this.neurons[0].map((n) => (n as InputNeuron<T>).execute),
+      miniBatchLength: this.miniBatchLength,
+      activationFunction: this.activationFunction,
       weightsAndBiases,
     });
 
@@ -258,6 +293,8 @@ export class Network<T> {
       name: `cloned from '${this.name}'`,
       numberByLayer: this.neurons.map((l) => l.length),
       parameters: this.neurons[0].map((n) => (n as InputNeuron<T>).execute),
+      miniBatchLength: this.miniBatchLength,
+      activationFunction: this.activationFunction,
       weightsAndBiases: this.neurons.map((l) =>
         l.map((n) => (
           {
@@ -275,26 +312,41 @@ export class Network<T> {
   name : ${this.name}
   ${this.neurons.map((layer, i) => `layer ${i}: ${layer}`).join("\n   ")}`;
 
-  private subsetOf = (trainingData: TrainingDataset<T>) => {
-    if (!this.miniBatchLength) return trainingData;
+  private partitionsOf = (
+    trainingData: TrainingDataset<T>,
+  ): TrainingDataset<T>[] => {
+    if (!this.miniBatchLength) return [trainingData];
 
     const associatedInputsAndResults = trainingData.inputs.map((input, i) => ({
       input,
       expectedResult: (trainingData.expectedResults || [])[i++] ||
         [],
-    })).sort(() => Math.random() - 0.5).slice(
-      0,
-      Math.min(trainingData.inputs.length, this.miniBatchLength),
-    );
+    })).sort(() => Math.random() - 0.5);
 
-    let i = 0;
-    return {
-      inputs: associatedInputsAndResults.map((association) =>
-        association.input
-      ),
-      theory: trainingData.theory ||
-        (() => (trainingData.expectedResults || [])[i++] || []),
-    };
+    const numberOfPartitions = this.neurons.reduce(
+      (acc, value) => acc + value.length,
+      0,
+    );
+    return Array(numberOfPartitions).fill(0).map((_, i) => {
+      let counter = 0;
+      const first = associatedInputsAndResults.length / numberOfPartitions * i;
+      const last = Math.min(
+        first + (this.miniBatchLength || associatedInputsAndResults.length),
+        associatedInputsAndResults.length / numberOfPartitions * (i + 1) -
+          1,
+      );
+      return {
+        inputs: associatedInputsAndResults.slice(first, last).map((
+          association,
+        ) => association.input),
+        theory: trainingData.theory ||
+          (() =>
+            (trainingData.expectedResults || []).slice(
+              first,
+              last,
+            )[counter++] || []),
+      };
+    });
   };
 
   private adjust = (owner: any, fieldName: string, render: () => number) => {
@@ -308,6 +360,10 @@ export class Network<T> {
       const rightNewCost = render();
       owner[fieldName] -= increment;
       const direction = leftNewCost < rightNewCost && leftNewCost < actualCost
+        ? -1
+        : rightNewCost < leftNewCost && rightNewCost < actualCost
+        ? 1
+        : leftNewCost < rightNewCost && leftNewCost < actualCost
         ? -1
         : rightNewCost < leftNewCost && rightNewCost < actualCost
         ? 1
