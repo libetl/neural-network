@@ -64,25 +64,35 @@ Deno.test("should compute cost summary with a function", () => {
 });
 
 Deno.test("should train and learn with a function", () => {
-  const inputs = Array(10000).fill(1).map(() => ({
-    x: Math.floor(Math.random() * 500 - 250) / 100,
-    y: Math.floor(Math.random() * 500 - 250) / 100,
-  }));
-
+  const inputs = Array(5000).fill(1).map(() => ({
+    x: Math.floor(Math.random() * 50000 - 25000) / 100,
+    y: Math.floor(Math.random() * 50000 - 25000) / 100,
+  })).concat(
+    Array(1000).fill(1).map(() => ({
+      x: Math.floor(Math.random() * 500 - 250) / 100,
+      y: Math.floor(Math.random() * 500 - 250) / 100,
+    })),
+  ).concat(
+    Array(4000).fill(1).map(() => ({
+      x: Math.floor(Math.random() * 300 - 150) / 100,
+      y: Math.floor(Math.random() * 300 - 150) / 100,
+    })),
+  ).sort(() => Math.random() - 0.5);
   const network = new Network({
-    numberByLayer: [1, 4, 1],
-    miniBatchLength: 100,
+    numberByLayer: [2, 1],
+    miniBatchLength: 10000,
     activationFunction: "sigmoid",
     randomInit: false,
     parameters: [
-      ({ x, y }: { x: number; y: number }) => x * x + y * y,
+      ({ x, y }: { x: number; y: number }) => Math.abs(x),
+      ({ x, y }: { x: number; y: number }) => Math.abs(y),
     ],
   });
 
   const trainingResult = network.trainAndGetGradientDescent({
     inputs,
     theory: ({ x, y }: ({ x: number; y: number })) =>
-      Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [0] : [3],
+      Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [-4] : [15],
   });
 
   const trainedNetwork = network.apply(trainingResult.weightsAndBiases);
@@ -91,14 +101,15 @@ Deno.test("should train and learn with a function", () => {
   [
     { x: 0, y: 0 },
     { x: -0.2, y: 0.34 },
-    { x: -0.002, y: 0.014 },
+    { x: -0.02, y: 0.01 },
     { x: -0.9, y: 0.4 },
     { x: 0, y: 1 },
     { x: 1, y: 0 },
     { x: 2, y: 0 },
     { x: 3, y: 3 },
-    { x: -40, y: -6 },
-    { x: 53, y: 53 },
+    { x: -5, y: 6 },
+    { x: -24, y: -6 },
+    { x: 24, y: 24 },
   ].map((coords) =>
     console.log(
       `${JSON.stringify(coords)} => random : ${
@@ -106,6 +117,40 @@ Deno.test("should train and learn with a function", () => {
       }, trained: ${trainedNetwork.process(coords)}`,
     )
   );
+});
+
+Deno.test("loaded weights and biases", () => {
+  const network = new Network({
+    numberByLayer: [1, 1],
+    activationFunction: "sigmoid",
+    randomInit: false,
+    parameters: [
+      ({ x, y }: { x: number; y: number }) => x * x + y * y,
+    ],
+    weightsAndBiases: [ // was imported from training
+      [{ bias: -1.44, weights: [] }],
+      [{ bias: 2, weights: [-5] }],
+    ],
+  });
+
+  /*console.log("results (true if coords are in a [1, 1] circle)");
+  [
+    { x: 0, y: 0 },
+    { x: -0.2, y: 0.34 },
+    { x: -0.02, y: 0.01 },
+    { x: -0.9, y: 0.4 },
+    { x: 0, y: 1 },
+    { x: 1, y: 0 },
+    { x: 2, y: 0 },
+    { x: 3, y: 3 },
+    { x: -5, y: 6 },
+    { x: -24, y: -6 },
+    { x: 24, y: 24 },
+  ].map((coords) =>
+    console.log(
+      `${JSON.stringify(coords)} => ${network.process(coords)[0] > 0.5}`,
+    )
+  );*/
 });
 
 Deno.test("prepared network and trained network", () => {
@@ -142,7 +187,7 @@ Deno.test("prepared network and trained network", () => {
     ],
     trainings,
   });
-  console.log("results");
+  /*console.log("results");
   [
     { x: 0, y: 0 },
     { x: -0.2, y: 0.34 },
@@ -160,13 +205,27 @@ Deno.test("prepared network and trained network", () => {
         network1.process(coords)
       }, network2: ${network2.process(coords)}`,
     )
-  );
+  );*/
 });
 
 Deno.test("mixed national institute of standards and technology", async () => {
-  const images = await readDatabase();
+  /*const images = await readDatabase();
   const network = new Network<{ label: number; bitmap: number[][] }>({
     numberByLayer: [784, 40, 15, 10],
+    miniBatchLength: 10,
+    randomInit: false,
+    afterEachNeuronTraining: (network, iteration, total) => {
+      const encoder = new TextEncoder();
+      Deno.writeFileSync(
+        "mnist.json",
+        encoder.encode(
+          JSON.stringify(
+            { iteration, weightsAndBiases: network.getWeightsAndBiases() },
+          ),
+        ),
+      );
+      console.log(`iteration ${iteration + 1} / ${total}`);
+    },
     parameters: Array(784).fill(0).map((_, i) =>
       ({ label, bitmap }) => {
         const column = i % 28;
@@ -194,5 +253,5 @@ Deno.test("mixed national institute of standards and technology", async () => {
       result[label] = 1;
       return result;
     },
-  });
+  });*/
 });

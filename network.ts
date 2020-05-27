@@ -137,6 +137,12 @@ export class Network<T> {
   private readonly name: string;
   private readonly activationFunction: ActivationFunction;
   private readonly miniBatchLength?: number;
+  private readonly randomInit?: boolean;
+  private readonly afterEachNeuronTraining?: (
+    network: Network<T>,
+    iteration: number,
+    total: number,
+  ) => void;
   constructor({
     name,
     numberByLayer,
@@ -146,6 +152,7 @@ export class Network<T> {
     miniBatchLength,
     activationFunction,
     randomInit,
+    afterEachNeuronTraining,
   }: {
     name?: string;
     numberByLayer: number[];
@@ -155,10 +162,17 @@ export class Network<T> {
     miniBatchLength?: number;
     activationFunction?: ActivationFunction;
     randomInit?: boolean;
+    afterEachNeuronTraining?: (
+      network: Network<T>,
+      iteration: number,
+      total: number,
+    ) => void;
   }) {
     this.name = name || "anonymous network";
     this.miniBatchLength = miniBatchLength;
     this.activationFunction = activationFunction || "sigmoid";
+    this.afterEachNeuronTraining = afterEachNeuronTraining;
+    this.randomInit = randomInit;
     this.neurons = numberByLayer.map((n) => Array(n).fill(0));
     this.neurons.forEach((array, i, network) => {
       for (let j = 0; j < array.length; j++) {
@@ -182,7 +196,7 @@ export class Network<T> {
             network[i - 1].map((neuron2, k) => ({
               neuron: neuron2,
               number: (weightsAndBias.weights || [])[k] ||
-                (randomInit ? Math.random() : 0),
+                (randomInit !== false ? Math.random() : 0),
             })),
             weightsAndBias.bias || (randomInit !== false ? Math.random() : 0),
           );
@@ -249,7 +263,11 @@ export class Network<T> {
       layer.map((neuron, j) => {
         const iteration = neurons.slice(0, i)
           .reduce((acc, value) => acc + value.length, 0) + j;
-        return ({
+        const total = neurons.reduce(
+          (acc, value) => acc + value.length,
+          0,
+        );
+        const result = {
           weights: neuron instanceof HiddenLayerNeuron
             ? (neuron as HiddenLayerNeuron).weights.map((weight) =>
               clone.adjust(
@@ -270,7 +288,11 @@ export class Network<T> {
                 trainingPartitions[iteration % trainingPartitions.length],
               ).average,
           ),
-        });
+        };
+        if (clone.afterEachNeuronTraining) {
+          clone.afterEachNeuronTraining(clone, iteration, total);
+        }
+        return result;
       })
     ).reverse();
     const remainingCosts = clone.costSummaryOf(trainingPartitions[0]);
@@ -282,6 +304,16 @@ export class Network<T> {
     };
   };
 
+  getWeightsAndBiases = () =>
+    this.neurons.map((l) =>
+      l.map((n) => (
+        {
+          bias: (n as any).bias,
+          weights: ((n as any).weights || []).map((w: SavedValue) => w.number),
+        }
+      ))
+    );
+
   apply = (weightsAndBiases: WeightsAndBias[][]) =>
     new Network<T>({
       name: `trained from '${this.name}'`,
@@ -289,6 +321,8 @@ export class Network<T> {
       parameters: this.neurons[0].map((n) => (n as InputNeuron<T>).execute),
       miniBatchLength: this.miniBatchLength,
       activationFunction: this.activationFunction,
+      afterEachNeuronTraining: this.afterEachNeuronTraining,
+      randomInit: this.randomInit,
       weightsAndBiases,
     });
 
@@ -299,16 +333,9 @@ export class Network<T> {
       parameters: this.neurons[0].map((n) => (n as InputNeuron<T>).execute),
       miniBatchLength: this.miniBatchLength,
       activationFunction: this.activationFunction,
-      weightsAndBiases: this.neurons.map((l) =>
-        l.map((n) => (
-          {
-            bias: (n as any).bias,
-            weights: ((n as any).weights || []).map((w: SavedValue) =>
-              w.number
-            ),
-          }
-        ))
-      ),
+      afterEachNeuronTraining: this.afterEachNeuronTraining,
+      randomInit: this.randomInit,
+      weightsAndBiases: this.getWeightsAndBiases(),
     });
 
   toString = () =>
@@ -356,6 +383,7 @@ export class Network<T> {
   private adjust = (owner: any, fieldName: string, render: () => number) => {
     let increment = 0.0000000002;
     let adjustment = 0;
+    let lastAdustment = 0;
     while (increment > 0.0000000001) {
       const actualCost = render();
       owner[fieldName] -= increment;
@@ -371,8 +399,16 @@ export class Network<T> {
         ? -1
         : rightNewCost < leftNewCost && rightNewCost < actualCost
         ? 1
+        : leftNewCost < actualCost
+        ? -1
+        : rightNewCost < actualCost
+        ? 1
         : 0;
       owner[fieldName] += direction * increment;
+      lastAdustment = adjustment;
+      if (adjustment + direction * increment === lastAdustment) {
+        return adjustment + direction * increment;
+      }
       adjustment += direction * increment;
       increment = direction === 0 ? increment / 2 : increment * 2;
     }
