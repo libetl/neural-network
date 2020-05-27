@@ -70,7 +70,7 @@ Deno.test("should train and learn with a function", () => {
   }));
 
   const network = new Network({
-    numberByLayer: [1, 1],
+    numberByLayer: [1, 4, 1],
     miniBatchLength: 100,
     activationFunction: "sigmoid",
     randomInit: false,
@@ -82,7 +82,7 @@ Deno.test("should train and learn with a function", () => {
   const trainingResult = network.trainAndGetGradientDescent({
     inputs,
     theory: ({ x, y }: ({ x: number; y: number })) =>
-      Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [0] : [1],
+      Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [0] : [3],
   });
 
   const trainedNetwork = network.apply(trainingResult.weightsAndBiases);
@@ -177,6 +177,14 @@ Deno.test("mixed national institute of standards and technology", async () => {
         return bitmap[row][column] / 255.0;
       }
     ),
+    trainings: {
+      inputs: images || [],
+      theory: ({ label, bitmap }: { label: number; bitmap: number[][] }) => {
+        const result = Array(10).fill(0);
+        result[label] = 1;
+        return result;
+      },
+    },
   });
 
   const trainingResult = network.costSummaryOf({

@@ -241,10 +241,14 @@ export class Network<T> {
   ): TrainingResult<T> => {
     const clone = this.clone();
     const trainingPartitions = this.partitionsOf(trainingDataFromInput);
-    const weightsAndBiases = clone.neurons.slice().reverse().map((layer, i) =>
+    const weightsAndBiases = clone.neurons.slice().reverse().map((
+      layer,
+      i,
+      neurons,
+    ) =>
       layer.map((neuron, j) => {
-        const iteration = clone.neurons.slice(0, Math.max(i - 1, 0))
-          .reduce((acc, value) => acc + value.length, j);
+        const iteration = neurons.slice(0, i)
+          .reduce((acc, value) => acc + value.length, 0) + j;
         return ({
           weights: neuron instanceof HiddenLayerNeuron
             ? (neuron as HiddenLayerNeuron).weights.map((weight) =>
