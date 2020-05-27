@@ -34,6 +34,9 @@
         Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [-4] : [15],
       // the theory can be replaced with an expectedResults array if
       // there is no theory (inputs[k] has for result expectedResults[k])
+      // in any case, the result should activate the OutputNeuron you need
+      // (if you want to activate the third one, it should be [0, 0, x]
+      // with x > 1)
     },
   });
 
