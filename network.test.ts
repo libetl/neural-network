@@ -1,34 +1,34 @@
-import { Network } from "./network.ts";
-import { readDatabase } from "./mixedNationalInstituteOfStandardsAndTechnologyReader.ts";
+import { Network } from './network.ts'
+import { readDatabase } from './mixedNationalInstituteOfStandardsAndTechnologyReader.ts'
 
-Deno.test("should gives random results with not trained network", () => {
+Deno.test('should gives random results with not trained network', () => {
   const network = new Network({
     numberByLayer: [4, 4, 2],
     parameters: [
       ({ x, y }: { x: number; y: number }) => x * x + y * y,
       ({ x, y }: { x: number; y: number }) => x,
       ({ x, y }: { x: number; y: number }) => y,
-      ({ x, y }: { x: number; y: number }) => x * y,
-    ],
-  });
+      ({ x, y }: { x: number; y: number }) => x * y
+    ]
+  })
 
-  network.process({ x: 0, y: 0 });
-  network.process({ x: 0, y: 1 });
-  network.process({ x: 1, y: 0 });
-  network.process({ x: 2, y: 0 });
-  network.process({ x: 3, y: 3 });
-});
+  network.process({ x: 0, y: 0 })
+  network.process({ x: 0, y: 1 })
+  network.process({ x: 1, y: 0 })
+  network.process({ x: 2, y: 0 })
+  network.process({ x: 3, y: 3 })
+})
 
-Deno.test("should compute cost summary", () => {
+Deno.test('should compute cost summary', () => {
   const network = new Network({
     numberByLayer: [4, 4, 2],
     parameters: [
       ({ x, y }: { x: number; y: number }) => x * x + y * y,
       ({ x, y }: { x: number; y: number }) => x,
       ({ x, y }: { x: number; y: number }) => y,
-      ({ x, y }: { x: number; y: number }) => x * y,
-    ],
-  });
+      ({ x, y }: { x: number; y: number }) => x * y
+    ]
+  })
 
   network.costSummaryOf({
     inputs: [
@@ -36,69 +36,86 @@ Deno.test("should compute cost summary", () => {
       { x: 0, y: 1 },
       { x: 1, y: 0 },
       { x: 2, y: 0 },
-      { x: 3, y: 3 },
+      { x: 3, y: 3 }
     ],
-    expectedResults: [[1, 0], [1, 0], [1, 0], [0, 1], [0, 1]],
-  });
-});
+    expectedResults: [
+      [1, 0],
+      [1, 0],
+      [1, 0],
+      [0, 1],
+      [0, 1]
+    ]
+  })
+})
 
-Deno.test("should compute cost summary with a function", () => {
+Deno.test('should compute cost summary with a function', () => {
   const network = new Network({
     numberByLayer: [4, 4, 2],
     parameters: [
       ({ x, y }: { x: number; y: number }) => x * x + y * y,
       ({ x, y }: { x: number; y: number }) => x,
       ({ x, y }: { x: number; y: number }) => y,
-      ({ x, y }: { x: number; y: number }) => x * y,
-    ],
-  });
+      ({ x, y }: { x: number; y: number }) => x * y
+    ]
+  })
 
   network.costSummaryOf({
-    inputs: Array(100).fill(1).map((_) => ({
-      x: Math.random() * 5 - 2.5,
-      y: Math.random() * 5 - 2.5,
-    })),
-    theory: ({ x, y }: ({ x: number; y: number })) =>
-      Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [0] : [1],
-  });
-});
+    inputs: Array(100)
+      .fill(1)
+      .map(_ => ({
+        x: Math.random() * 5 - 2.5,
+        y: Math.random() * 5 - 2.5
+      })),
+    theory: ({ x, y }: { x: number; y: number }) =>
+      Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [0] : [1]
+  })
+})
 
-Deno.test("should train and learn with a function", () => {
-  const inputs = Array(5000).fill(1).map(() => ({
-    x: Math.floor(Math.random() * 50000 - 25000) / 100,
-    y: Math.floor(Math.random() * 50000 - 25000) / 100,
-  })).concat(
-    Array(1000).fill(1).map(() => ({
-      x: Math.floor(Math.random() * 500 - 250) / 100,
-      y: Math.floor(Math.random() * 500 - 250) / 100,
-    })),
-  ).concat(
-    Array(4000).fill(1).map(() => ({
-      x: Math.floor(Math.random() * 300 - 150) / 100,
-      y: Math.floor(Math.random() * 300 - 150) / 100,
-    })),
-  ).sort(() => Math.random() - 0.5);
+Deno.test('should train and learn with a function', () => {
+  const inputs = Array(5000)
+    .fill(1)
+    .map(() => ({
+      x: Math.floor(Math.random() * 50000 - 25000) / 100,
+      y: Math.floor(Math.random() * 50000 - 25000) / 100
+    }))
+    .concat(
+      Array(1000)
+        .fill(1)
+        .map(() => ({
+          x: Math.floor(Math.random() * 500 - 250) / 100,
+          y: Math.floor(Math.random() * 500 - 250) / 100
+        }))
+    )
+    .concat(
+      Array(4000)
+        .fill(1)
+        .map(() => ({
+          x: Math.floor(Math.random() * 300 - 150) / 100,
+          y: Math.floor(Math.random() * 300 - 150) / 100
+        }))
+    )
+    .sort(() => Math.random() - 0.5)
   const network = new Network({
     numberByLayer: [2, 1],
     miniBatchLength: 10000,
-    activationFunction: "sigmoid",
+    activationFunction: 'sigmoid',
     randomInit: false,
     parameters: [
       ({ x, y }: { x: number; y: number }) => Math.abs(x),
-      ({ x, y }: { x: number; y: number }) => Math.abs(y),
-    ],
-  });
+      ({ x, y }: { x: number; y: number }) => Math.abs(y)
+    ]
+  })
 
   const trainingResult = network.trainAndGetGradientDescent({
     inputs,
-    theory: ({ x, y }: ({ x: number; y: number })) =>
-      Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [-4] : [15],
-  });
+    theory: ({ x, y }: { x: number; y: number }) =>
+      Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [-4] : [15]
+  })
 
-  const trainedNetwork = network.apply(trainingResult.weightsAndBiases);
+  const trainedNetwork = network.apply(trainingResult.weightsAndBiases)
 
-  console.log("results");
-  [
+  console.log('results')
+  ;[
     { x: 0, y: 0 },
     { x: -0.2, y: 0.34 },
     { x: -0.02, y: 0.01 },
@@ -109,29 +126,28 @@ Deno.test("should train and learn with a function", () => {
     { x: 3, y: 3 },
     { x: -5, y: 6 },
     { x: -24, y: -6 },
-    { x: 24, y: 24 },
-  ].map((coords) =>
+    { x: 24, y: 24 }
+  ].map(coords =>
     console.log(
-      `${JSON.stringify(coords)} => random : ${
-        network.process(coords)
-      }, trained: ${trainedNetwork.process(coords)}`,
+      `${JSON.stringify(coords)} => random : ${network.process(
+        coords
+      )}, trained: ${trainedNetwork.process(coords)}`
     )
-  );
-});
+  )
+})
 
-Deno.test("loaded weights and biases", () => {
+Deno.test('loaded weights and biases', () => {
   const network = new Network({
     numberByLayer: [1, 1],
-    activationFunction: "sigmoid",
+    activationFunction: 'sigmoid',
     randomInit: false,
-    parameters: [
-      ({ x, y }: { x: number; y: number }) => x * x + y * y,
-    ],
-    weightsAndBiases: [ // was imported from training
+    parameters: [({ x, y }: { x: number; y: number }) => x * x + y * y],
+    weightsAndBiases: [
+      // was imported from training
       [{ bias: -1.44, weights: [] }],
-      [{ bias: 2, weights: [-5] }],
-    ],
-  });
+      [{ bias: 2, weights: [-5] }]
+    ]
+  })
 
   /*console.log("results (true if coords are in a [1, 1] circle)");
   [
@@ -151,42 +167,44 @@ Deno.test("loaded weights and biases", () => {
       `${JSON.stringify(coords)} => ${network.process(coords)[0] > 0.5}`,
     )
   );*/
-});
+})
 
-Deno.test("prepared network and trained network", () => {
-  const inputs = Array(100).fill(1).map(() => ({
-    x: Math.floor(Math.random() * 500 - 250) / 100,
-    y: Math.floor(Math.random() * 500 - 250) / 100,
-  }));
+Deno.test('prepared network and trained network', () => {
+  const inputs = Array(100)
+    .fill(1)
+    .map(() => ({
+      x: Math.floor(Math.random() * 500 - 250) / 100,
+      y: Math.floor(Math.random() * 500 - 250) / 100
+    }))
 
   const trainings = {
     inputs,
-    theory: ({ x, y }: ({ x: number; y: number })) =>
-      Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [0, 1] : [1, 0],
-  };
+    theory: ({ x, y }: { x: number; y: number }) =>
+      Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [0, 1] : [1, 0]
+  }
 
   const network0 = new Network({
-    name: "Network 1",
+    name: 'Network 1',
     numberByLayer: [3, 2],
     parameters: [
       ({ x, y }: { x: number; y: number }) => Math.abs(x),
       ({ x, y }: { x: number; y: number }) => Math.abs(y),
-      ({ x, y }: { x: number; y: number }) => x * x + y * y,
-    ],
-  });
-  const trainingResult = network0.trainAndGetGradientDescent(trainings);
-  const network1 = network0.apply(trainingResult.weightsAndBiases);
+      ({ x, y }: { x: number; y: number }) => x * x + y * y
+    ]
+  })
+  const trainingResult = network0.trainAndGetGradientDescent(trainings)
+  const network1 = network0.apply(trainingResult.weightsAndBiases)
 
   const network2 = new Network({
-    name: "Network 2",
+    name: 'Network 2',
     numberByLayer: [3, 2],
     parameters: [
       ({ x, y }: { x: number; y: number }) => Math.abs(x),
       ({ x, y }: { x: number; y: number }) => Math.abs(y),
-      ({ x, y }: { x: number; y: number }) => x * x + y * y,
+      ({ x, y }: { x: number; y: number }) => x * x + y * y
     ],
-    trainings,
-  });
+    trainings
+  })
   /*console.log("results");
   [
     { x: 0, y: 0 },
@@ -206,52 +224,53 @@ Deno.test("prepared network and trained network", () => {
       }, network2: ${network2.process(coords)}`,
     )
   );*/
-});
+})
 
-Deno.test("mixed national institute of standards and technology", async () => {
-  /*const images = await readDatabase();
+Deno.test('mixed national institute of standards and technology', async () => {
+  const images = await readDatabase()
   const network = new Network<{ label: number; bitmap: number[][] }>({
     numberByLayer: [784, 40, 15, 10],
     miniBatchLength: 10,
     randomInit: false,
     afterEachNeuronTraining: (network, iteration, total) => {
-      const encoder = new TextEncoder();
+      const encoder = new TextEncoder()
       Deno.writeFileSync(
-        "mnist.json",
+        'mnist.json',
         encoder.encode(
-          JSON.stringify(
-            { iteration, weightsAndBiases: network.getWeightsAndBiases() },
-          ),
-        ),
-      );
-      console.log(`iteration ${iteration + 1} / ${total}`);
+          JSON.stringify({
+            iteration,
+            weightsAndBiases: network.getWeightsAndBiases()
+          })
+        )
+      )
+      console.log(`iteration ${iteration + 1} / ${total}`)
     },
-    parameters: Array(784).fill(0).map((_, i) =>
-      ({ label, bitmap }) => {
-        const column = i % 28;
-        const row = Math.floor(i / 28);
+    parameters: Array(784)
+      .fill(0)
+      .map((_, i) => ({ label, bitmap }) => {
+        const column = i % 28
+        const row = Math.floor(i / 28)
         if (!bitmap || !bitmap[row] || bitmap[row][column] === undefined) {
-          return 0;
+          return 0
         }
-        return bitmap[row][column] / 255.0;
-      }
-    ),
+        return bitmap[row][column] / 255.0
+      }),
     trainings: {
       inputs: images || [],
       theory: ({ label, bitmap }: { label: number; bitmap: number[][] }) => {
-        const result = Array(10).fill(0);
-        result[label] = 1;
-        return result;
-      },
-    },
-  });
+        const result = Array(10).fill(0)
+        result[label] = 1
+        return result
+      }
+    }
+  })
 
   const trainingResult = network.costSummaryOf({
     inputs: images?.slice(0, 1) || [],
     theory: ({ label, bitmap }: { label: number; bitmap: number[][] }) => {
-      const result = Array(10).fill(0);
-      result[label] = 1;
-      return result;
-    },
-  });*/
-});
+      const result = Array(10).fill(0)
+      result[label] = 1
+      return result
+    }
+  })
+})
