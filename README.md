@@ -61,6 +61,15 @@
   );
 ```
 
+## How to compile
+
+```bash
+$ deno bundle network.ts | babel -f network.js > network.js
+Bundling file:///D:/workspace/neural/network.ts
+
+$
+```
+
 ## Known issue
 
 The results, even when activated, are sometimes very far from 1,
