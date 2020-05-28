@@ -1,0 +1,418 @@
+<html class="mdl-js">
+
+<head>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.teal-pink.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/getmdl-select/getmdl-select.min.css">
+  <script>
+    exports = {}
+  </script>
+  <script defer="defer" src="https://cdn.jsdelivr.net/npm/regenerator-runtime@0.12.1/runtime.js"></script>
+  <script defer="defer" src="https://code.getmdl.io/1.3.0/material.js"></script>
+  <script defer="defer" src="https://cdn.jsdelivr.net/npm/getmdl-select/getmdl-select.min.js"></script>
+  <script defer="defer" src="./network.js"></script>
+  <style>
+    .training-card-wide.mdl-card {
+      width: 256px;
+    }
+
+    .training-card-wide>.mdl-card__title {
+      color: #fff;
+      height: 176px;
+      background: url('https://d33wubrfki0l68.cloudfront.net/f9911f02f59d5dea55b81849d258dafea6172bfb/c52a2/images/css/blend-modes/sky.jpg') center / cover;
+      background-blend-mode: soft-light;
+    }
+
+    .training-card-wide>.mdl-card__menu {
+      color: #fff;
+    }
+
+    .parameters-card-wide.mdl-card {
+      width: 256px;
+    }
+
+    .parameters-card-wide>.mdl-card__title {
+      color: #fff;
+      height: 176px;
+      background: url('https://i.pinimg.com/originals/fc/df/27/fcdf27152f63402538b11a9c99a8f598.jpg') center / cover;
+      background-blend-mode: soft-light;
+    }
+
+    .parameters-card-wide>.mdl-card__menu {
+      color: #fff;
+    }
+
+    .canvas-card-image.mdl-card {
+      width: 100%;
+      height: 100%;
+    }
+
+    .canvas-card-image>.mdl-card__actions {
+      height: 52px;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .canvas-card-image__filename {
+      color: #fff;
+      font-weight: bold;
+      font-size: 24px;
+      font-weight: 500;
+    }
+  </style>
+  <title>Neural Network</title>
+</head>
+
+<body>
+  <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+    <header class="mdl-layout__header">
+      <div class="mdl-layout__header-row">
+        <span class="mdl-layout-title">Neural network</span>
+        <div class="mdl-layout-spacer"></div>
+        <nav class="mdl-navigation mdl-layout--large-screen-only">
+        </nav>
+      </div>
+    </header>
+    <main class="mdl-layout__content" style="margin-left: 2%;margin-top: 1%;width:96%;height:100%">
+      <div style="display: flex;flex-direction: row;">
+        <div class="training-card-wide mdl-card mdl-shadow--2dp">
+          <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Train new model</h2>
+          </div>
+          <div class="mdl-card__supporting-text">
+            Before playing with your model, you should train it with a theory
+          </div>
+          <form action="#">
+            <div class="mdl-grid">
+              <div class="mdl-cell mdl-cell--4-col" style="align-self: center;">Theory</div>
+              <div class="mdl-cell mdl-cell--8-col">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input class="mdl-textfield__input" type="text" id="theory">
+                  <label class="mdl-textfield__label" for="theory">x^2 + y^2 &lt; 1</label>
+                </div>
+              </div>
+              <div class="mdl-cell mdl-cell--4-col" style="align-self: center;">Training size</div>
+              <div class="mdl-cell mdl-cell--8-col">
+                <input class="mdl-slider mdl-js-slider" id="trainingSize" type="range" min="100" max="10000" value="500"
+                  tabindex="0">
+              </div>
+              <div class="mdl-cell mdl-cell--4-col" style="align-self: center;">Variables amplitude</div>
+              <div class="mdl-cell mdl-cell--8-col">
+                <input class="mdl-slider mdl-js-slider" id="variablesAmplitude" type="range" min="1" max="20" value="5"
+                  tabindex="0">
+              </div>
+          </form>
+          <div class="mdl-grid">
+            <div class="mdl-cell mdl-cell--9-col">&nbsp;</div>
+            <div class="mdl-cell mdl-cell--1-col" style="align-self: flex-end;">
+              <button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored"
+                onclick="startTraining()">
+                <i class="material-icons">engineering</i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="flex-grow: 1">
+        <div class="canvas-card-image mdl-card mdl-shadow--2dp">
+          <div class="mdl-card__title mdl-card--expand" style="padding:0;margin: 0">
+            <canvas id="canvas" style="width: 100%;margin-bottom: -50px" class="mdl-shadow--2dp">
+            </canvas>
+          </div>
+          <div class="mdl-card__actions">
+            <div class="mdl-card__supporting-text">
+              Blue is the value computed by the theory and green is the prediction by the model
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex;flex-direction: row;">
+        <div class="parameters-card-wide mdl-card mdl-shadow--2dp">
+          <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Be more accurate</h2>
+          </div>
+          <div class="mdl-card__supporting-text">
+            Specify the parameters and hidden layers you want to take in consideration to train the model
+          </div>
+          <form action="#">
+            <div class="mdl-grid">
+              <div class="mdl-cell mdl-cell--5-col">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label getmdl-select"
+                  style="margin-bottom: -20px;margin-top: -20px;">
+                  <input type="text" class="mdl-textfield__input" id="layer1">
+                  <input type="hidden" value="" name="layer1">
+                  <label for="layer1" class="mdl-textfield__label">Hidden L1</label>
+                  <ul for="layer1" class="mdl-menu mdl-menu--bottom-left mdl-js-menu">
+                    <li class="mdl-menu__item" data-val="" data-selected="true">None</li>
+                    <li class="mdl-menu__item" data-val="1">1 Neuron</li>
+                    <li class="mdl-menu__item" data-val="2">2 Neurons</li>
+                    <li class="mdl-menu__item" data-val="3">3 Neurons</li>
+                    <li class="mdl-menu__item" data-val="4">4 Neurons</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="mdl-cell mdl-cell--5-col">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label getmdl-select"
+                  style="margin-bottom: -20px;margin-top: -20px;">
+                  <input type="text" value="" class="mdl-textfield__input" id="layer2" readonly>
+                  <input type="hidden" value="" name="layer2">
+                  <label for="layer2" class="mdl-textfield__label">Hidden L2</label>
+                  <ul for="layer2" class="mdl-menu mdl-menu--bottom-left mdl-js-menu">
+                    <li class="mdl-menu__item" data-val="" data-selected="true">None</li>
+                    <li class="mdl-menu__item" data-val="1">1 Neuron</li>
+                    <li class="mdl-menu__item" data-val="2">2 Neurons</li>
+                    <li class="mdl-menu__item" data-val="3">3 Neurons</li>
+                    <li class="mdl-menu__item" data-val="4">4 Neurons</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="mdl-cell mdl-cell--4-col" style="align-self: top;">Param 1</div>
+              <div class="mdl-cell mdl-cell--8-col">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+                  style="margin-bottom: -20px;margin-top: -20px;">
+                  <input class="mdl-textfield__input" type="text" id="parameter1" value="x">
+                  <label class="mdl-textfield__label" for="theory">example : |x| or x^2</label>
+                </div>
+              </div>
+              <div class="mdl-cell mdl-cell--4-col" style="align-self: top;">Param 2</div>
+              <div class="mdl-cell mdl-cell--8-col">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+                  style="margin-bottom: -20px;margin-top: -20px;">
+                  <input class="mdl-textfield__input" type="text" id="parameter2" value="y">
+                  <label class="mdl-textfield__label" for="theory">example : |y| or y^2</label>
+                </div>
+              </div>
+              <div class="mdl-cell mdl-cell--4-col" style="align-self: top;">Param 3</div>
+              <div class="mdl-cell mdl-cell--8-col">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+                  style="margin-bottom: -20px;margin-top: -20px;">
+                  <input class="mdl-textfield__input" type="text" id="parameter3" value="">
+                  <label class="mdl-textfield__label" for="theory">example : x + y</label>
+                </div>
+              </div>
+              <div class="mdl-cell mdl-cell--4-col" style="align-self: top;">Param 4</div>
+              <div class="mdl-cell mdl-cell--8-col">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+                  style="margin-bottom: -20px;margin-top: -20px;">
+                  <input class="mdl-textfield__input" type="text" id="parameter4" value="">
+                  <label class="mdl-textfield__label" for="theory">example : x * y</label>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script type="text/javascript" language="javascript" defer>
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+    const width = parseInt(window.getComputedStyle(canvas).width);
+    const height = parseInt(window.getComputedStyle(canvas).height);
+    canvas.width = width
+    canvas.height = height
+    context.clearRect(0, 0, width, height);
+
+    function MaxX() {
+      return 20;
+    }
+
+    function MinX() {
+      return -20;
+    }
+
+    function MaxY() {
+      return MaxX() * height / width;
+    }
+
+    function MinY() {
+      return MinX() * height / width;
+    }
+
+    function XC(x) {
+      return (x - MinX()) / (MaxX() - MinX()) * width;
+    }
+
+    function YC(y) {
+      return height - (y - MinY()) / (MaxY() - MinY()) * height;
+    }
+
+    function XTickDelta() {
+      return 1;
+    }
+
+    function YTickDelta() {
+      return 1;
+    }
+
+    function drawAxes() {
+      context.save();
+      context.strokeStyle = '#000000'
+      context.linewidth = 2;
+      // +Y axis
+      context.beginPath();
+      context.moveTo(XC(0), YC(0));
+      context.lineTo(XC(0), YC(MaxY()));
+      context.stroke();
+
+      // -Y axis
+      context.beginPath();
+      context.moveTo(XC(0), YC(0));
+      context.lineTo(XC(0), YC(MinY()));
+      context.stroke();
+
+      // Y axis tick marks
+      let delta = YTickDelta();
+      for (let i = 1;
+        (i * delta) < MaxY(); ++i) {
+        context.beginPath();
+        context.moveTo(XC(0) - 5, YC(i * delta));
+        context.lineTo(XC(0) + 5, YC(i * delta));
+        context.stroke();
+      }
+
+      delta = YTickDelta();
+      for (let i = 1;
+        (i * delta) > MinY(); --i) {
+        context.beginPath();
+        context.moveTo(XC(0) - 5, YC(i * delta));
+        context.lineTo(XC(0) + 5, YC(i * delta));
+        context.stroke();
+      }
+
+      // +X axis
+      context.beginPath();
+      context.moveTo(XC(0), YC(0));
+      context.lineTo(XC(MaxX()), YC(0));
+      context.stroke();
+
+      // -X axis
+      context.beginPath();
+      context.moveTo(XC(0), YC(0));
+      context.lineTo(XC(MinX()), YC(0));
+      context.stroke();
+
+      // X tick marks
+      delta = XTickDelta();
+      for (let i = 1;
+        (i * delta) < MaxX(); ++i) {
+        context.beginPath();
+        context.moveTo(XC(i * delta), YC(0) - 5);
+        context.lineTo(XC(i * delta), YC(0) + 5);
+        context.stroke();
+      }
+
+      delta = XTickDelta();
+      for (var i = 1;
+        (i * delta) > MinX(); --i) {
+        context.beginPath();
+        context.moveTo(XC(i * delta), YC(0) - 5);
+        context.lineTo(XC(i * delta), YC(0) + 5);
+        context.stroke();
+      }
+      context.restore();
+    }
+
+    drawAxes()
+
+    currentNetwork = null
+
+    function startTraining() {
+      train(' ' + document.getElementById('theory').value + ' ',
+        document.getElementById('trainingSize').value,
+        document.getElementById('variablesAmplitude').value,
+        [document.getElementById('parameter1').value,
+          document.getElementById('parameter2').value,
+          document.getElementById('parameter3').value,
+          document.getElementById('parameter4').value,
+        ].filter(v => v).map(e => ' ' + e + ' '),
+        document.getElementById('layer1').value,
+        document.getElementById('layer2').value)
+    }
+
+    function toJavascriptExpr(expr) {
+      return expr
+        .replace(/([\s]+)(cos|sin|tan|sqrt)\(/g, "$1Math.$2\(")
+        .replace(/e\^([^\s]+)/g, "Math.exp($1)")
+        .replace(/([^\s]+)\^([^\s]+)/g, "Math.pow($1, $2)")
+        .replace(/\|([^\s]+)\|/g, "Math.abs($1)");
+    }
+
+    function train(theoryAsExpr, trainingSize, variablesAmplitudeAsString, parametersAsExprs, layer1, layer2) {
+      document.body.style.cursor = 'wait'
+      context.clearRect(0, 0, width, height);
+      const theoryAsJS = toJavascriptExpr(theoryAsExpr)
+      const parametersAsJS = parametersAsExprs.map(p => toJavascriptExpr(p))
+      const theory = eval(`({x,y}) => ${theoryAsJS} ? [1] : [0]`)
+      const parameters = parametersAsJS.map((param, i) => eval("({x,y}) => " + parametersAsJS[i]))
+      const variablesAmplitude = parseInt(variablesAmplitudeAsString)
+      const numberByLayer = [parameters.length]
+        .concat(layer1 && layer1 !== "None" ? Array(1).fill(parseInt(layer1)) : [])
+        .concat(layer2 && layer2 !== "None" ? Array(1).fill(parseInt(layer2)) : [])
+        .concat([1])
+      const inputs = new Array(parseInt(trainingSize)).fill().map((_, i) => {
+        const amplitude = i < trainingSize / 3 ? 5 : i < trainingSize / 2 ? 10 : variablesAmplitude
+        return ({
+          x: Math.floor(Math.random() * amplitude * 100 - amplitude * 100 / 2) /
+            100,
+          y: Math.floor(Math.random() * amplitude * 100 - amplitude * 100 / 2) /
+            100,
+        })
+      }).sort(() => Math.random() - 0.5)
+      new Promise(resolve => {
+        currentNetwork = new Network({
+          numberByLayer,
+          activationFunction: "sigmoid",
+          randomInit: true,
+          parameters,
+          trainings: {
+            inputs,
+            theory
+          },
+        })
+        resolve(currentNetwork)
+      }).then(network => {
+        let sum = 0
+        for (let x = MinX(); x <= MaxX(); x += 0.1) {
+          for (let y = MinY(); y <= MaxY(); y += 0.1) {
+            sum += network.process({
+              x,
+              y
+            })[0]
+          }
+        }
+        const average = sum / ((MaxX() - MinX()) * 10 * (MaxY() - MinY()) * 10)
+        for (let x = MinX(); x <= MaxX(); x += 0.1) {
+          for (let y = MinY(); y <= MaxY(); y += 0.1) {
+            if (network.process({
+                x,
+                y
+              })[0] >= average) {
+              context.strokeStyle = "#00FF00"
+              context.beginPath();
+              context.arc(XC(x), YC(y), 1, 0, 2 * Math.PI, true);
+              context.stroke();
+            }
+          }
+        }
+        context.strokeStyle = "#0000FF";
+        for (let x = MinX(); x <= MaxX(); x += 0.1) {
+          for (let y = MinY(); y <= MaxY(); y += 0.1) {
+            if (theory({
+                x,
+                y
+              })[0] >= 1) {
+              context.beginPath();
+              context.arc(XC(x), YC(y), 0.1, 0, 2 * Math.PI, true);
+              context.stroke();
+            }
+          }
+        }
+        drawAxes()
+        document.body.style.cursor = 'pointer'
+      })
+    }
+  </script>
+</body>
+
+</html>

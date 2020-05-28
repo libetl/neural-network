@@ -231,7 +231,7 @@ Deno.test('mixed national institute of standards and technology', async () => {
   const network = new Network<{ label: number; bitmap: number[][] }>({
     numberByLayer: [784, 40, 15, 10],
     miniBatchLength: 10,
-    randomInit: false,
+    randomInit: true,
     afterEachNeuronTraining: (network, iteration, total) => {
       const encoder = new TextEncoder()
       Deno.writeFileSync(
