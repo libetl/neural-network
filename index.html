@@ -332,6 +332,8 @@
 
     function toJavascriptExpr(expr) {
       return expr
+        .replace(/ <> /g, " !== ")
+        .replace(/ = /g, " === ")
         .replace(/([\s]+)(cos|sin|tan|sqrt)\(/g, "$1Math.$2\(")
         .replace(/e\^([^\s]+)/g, "Math.exp($1)")
         .replace(/([^\s]+)\^([^\s]+)/g, "Math.pow($1, $2)")
