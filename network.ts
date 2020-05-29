@@ -5,6 +5,7 @@ interface SavedValue {
 interface TrainingDataset<T> {
   inputs: T[]
   expectedResults?: number[][]
+  rounds?: number
   theory?: (input: T) => number[]
 }
 interface CostSummary {
@@ -24,7 +25,6 @@ interface WeightsAndBias {
 type ActivationFunction = 'sigmoid' | 'rectifiedLinearUnit' | 'exponentialLinearUnit'
 
 class Neuron {
-
   sigmoid(number: number) {
     return 1 / (1 + Math.exp(-number))
   }
@@ -128,6 +128,7 @@ export class Network<T> {
   private readonly randomInit?: boolean
   private readonly afterEachNeuronTraining?: (
     network: Network<T>,
+    round: number,
     iteration: number,
     total: number
   ) => void
@@ -151,7 +152,12 @@ export class Network<T> {
     miniBatchLength?: number
     activationFunction?: ActivationFunction
     randomInit?: boolean
-    afterEachNeuronTraining?: (network: Network<T>, iteration: number, total: number) => void
+    afterEachNeuronTraining?: (
+      network: Network<T>,
+      round: number,
+      iteration: number,
+      total: number
+    ) => void
   }) {
     this.name = name || 'anonymous network'
     this.miniBatchLength = miniBatchLength
@@ -230,44 +236,49 @@ export class Network<T> {
 
   trainAndGetGradientDescent = (trainingDataFromInput: TrainingDataset<T>): TrainingResult<T> => {
     const clone = this.clone()
-    const trainingPartitions = this.partitionsOf(trainingDataFromInput)
-    const weightsAndBiases = clone.neurons
-      .slice()
-      .reverse()
-      .map((layer, i, neurons) =>
-        layer.map((neuron, j) => {
-          const iteration = neurons.slice(0, i).reduce((acc, value) => acc + value.length, 0) + j
-          const total = neurons.reduce((acc, value) => acc + value.length, 0)
-          const result = {
-            weights:
-              neuron instanceof HiddenLayerNeuron
-                ? (neuron as HiddenLayerNeuron).weights.map(weight =>
-                    clone.adjust(
-                      weight,
-                      'number',
-                      () =>
-                        clone.costSummaryOf(
-                          trainingPartitions[iteration % trainingPartitions.length]
-                        ).average
-                    )
-                  )
-                : [],
-            bias: clone.adjust(
-              neuron,
-              'bias',
-              () =>
-                clone.costSummaryOf(trainingPartitions[iteration % trainingPartitions.length])
-                  .average
-            )
-          }
-          if (clone.afterEachNeuronTraining) {
-            clone.afterEachNeuronTraining(clone, iteration, total)
-          }
-          return result
-        })
-      )
-      .reverse()
-    const remainingCosts = clone.costSummaryOf(trainingPartitions[0])
+    const weightsAndBiases = Array(trainingDataFromInput.rounds || 1)
+      .fill(0)
+      .reduce((_a, _b, round) => {
+        const trainingPartitions = this.partitionsOf(trainingDataFromInput)
+        return clone.neurons
+          .slice()
+          .reverse()
+          .map((layer: Neuron[], i: number, neurons: Neuron[][]) =>
+            layer.map((neuron, j) => {
+              const iteration =
+                neurons.slice(0, i).reduce((acc, value) => acc + value.length, 0) + j
+              const total = neurons.reduce((acc, value) => acc + value.length, 0)
+              const result = {
+                weights:
+                  neuron instanceof HiddenLayerNeuron
+                    ? (neuron as HiddenLayerNeuron).weights.map(weight =>
+                        clone.adjust(
+                          weight,
+                          'number',
+                          () =>
+                            clone.costSummaryOf(
+                              trainingPartitions[iteration % trainingPartitions.length]
+                            ).average
+                        )
+                      )
+                    : [],
+                bias: clone.adjust(
+                  neuron,
+                  'bias',
+                  () =>
+                    clone.costSummaryOf(trainingPartitions[iteration % trainingPartitions.length])
+                      .average
+                )
+              }
+              if (clone.afterEachNeuronTraining) {
+                clone.afterEachNeuronTraining(clone, round, iteration, total)
+              }
+              return result
+            })
+          )
+          .reverse()
+      }, {})
+    const remainingCosts = clone.costSummaryOf(this.partitionsOf(trainingDataFromInput)[0])
     return {
       weightsAndBiases,
       remainingCost: remainingCosts.average,
@@ -286,7 +297,7 @@ export class Network<T> {
 
   apply = (weightsAndBiases: WeightsAndBias[][]) =>
     new Network<T>({
-      name: `trained from '${this.name}'`,
+      name: `trained from '${this.name}'`.substring(0, 100),
       numberByLayer: this.neurons.map(l => l.length),
       parameters: this.neurons[0].map(n => (n as InputNeuron<T>).execute),
       miniBatchLength: this.miniBatchLength,
@@ -298,7 +309,7 @@ export class Network<T> {
 
   clone = () =>
     new Network<T>({
-      name: `cloned from '${this.name}'`,
+      name: `cloned from '${this.name}'`.substring(0, 100),
       numberByLayer: this.neurons.map(l => l.length),
       parameters: this.neurons[0].map(n => (n as InputNeuron<T>).execute),
       miniBatchLength: this.miniBatchLength,

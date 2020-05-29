@@ -169,6 +169,51 @@ Deno.test('loaded weights and biases', () => {
   );*/
 })
 
+Deno.test('loaded from intense training in UI (x^2 + y^2 < 1)', () => {
+  const network = new Network({
+    numberByLayer: [2, 4, 1],
+    activationFunction: 'sigmoid',
+    randomInit: false,
+    parameters: [
+      ({ x, y }: { x: number; y: number }) => x,
+      ({ x, y }: { x: number; y: number }) => y
+    ],
+    weightsAndBiases: [
+      [
+        { bias: -0.10071499664092819, weights: [] },
+        { bias: -0.15018810063963497, weights: [] }
+      ],
+      [
+        { bias: -2.8468035812909434, weights: [5.45721869905237, -3.148199059174658] },
+        { bias: -5.242078727744964, weights: [-3.3284653639142725, 10.876261776883684] },
+        { bias: -12.976066169035779, weights: [36.003431279150426, 6.242494143417826] },
+        { bias: -20.989904892589315, weights: [13.402075212498223, 51.79564730855186] }
+      ],
+      [
+        {
+          bias: -5.425858592065819,
+          weights: [-58.58740543154484, -32.269696973037284, 18.54140361818438, 10.084452534168838]
+        }
+      ]
+    ]
+  })
+
+  console.log('results (true if coords are in a [1, 1] circle)')
+  ;[
+    { x: 0, y: 0 },
+    { x: -0.2, y: 0.34 },
+    { x: -0.02, y: 0.01 },
+    { x: -0.9, y: 0.4 },
+    { x: 0, y: 1 },
+    { x: 1, y: 0 },
+    { x: 2, y: 0 },
+    { x: 3, y: 3 },
+    { x: -5, y: 6 },
+    { x: -24, y: -6 },
+    { x: 24, y: 24 }
+  ].map(coords => console.log(`${JSON.stringify(coords)} => ${network.process(coords)[0]}`))
+})
+
 Deno.test('prepared network and trained network', () => {
   const inputs = Array(100)
     .fill(1)
@@ -232,7 +277,7 @@ Deno.test('mixed national institute of standards and technology', async () => {
     numberByLayer: [784, 40, 15, 10],
     miniBatchLength: 10,
     randomInit: true,
-    afterEachNeuronTraining: (network, iteration, total) => {
+    afterEachNeuronTraining: (network, round, iteration, total) => {
       const encoder = new TextEncoder()
       Deno.writeFileSync(
         'mnist.json',
@@ -243,7 +288,7 @@ Deno.test('mixed national institute of standards and technology', async () => {
           })
         )
       )
-      console.log(`iteration ${iteration + 1} / ${total}`)
+      console.log(`round ${round + 1}, iteration ${iteration + 1} / ${total}`)
     },
     parameters: Array(784)
       .fill(0)
