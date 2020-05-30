@@ -165,33 +165,39 @@ export class Network<T> {
     this.afterEachNeuronTraining = afterEachNeuronTraining
     this.randomInit = randomInit
     this.neurons = numberByLayer
-    .map(n => Array(n).fill(0))
-    .reduce((acc, value, i) => {
-      return [...acc, value.map((_, j) => {
-        const weightsAndBias = ((weightsAndBiases || [])[i] || [])[j] || { weights: [] }
-        return i === 0
-            ? new InputNeuron(
-                parameters[j],
-                weightsAndBias.bias || (randomInit !== false ? Math.random() : 0)
-              )
-            : i === numberByLayer.length - 1
-            ? new OutputNeuron(
-                acc[i - 1].map((neuron2: Neuron, k: number) => ({
-                  neuron: neuron2,
-                  number:
-                    (weightsAndBias.weights || [])[k] || (randomInit !== false ? Math.random() : 0)
-                })),
-                weightsAndBias.bias || (randomInit !== false ? Math.random() : 0)
-              )
-            : new HiddenLayerNeuron(
-              acc[i - 1].map((neuron2: Neuron, k: number) => ({
-                  neuron: neuron2,
-                  number:
-                    (weightsAndBias.weights || [])[k] || (randomInit !== false ? Math.random() : 0)
-                })),
-                weightsAndBias.bias || (randomInit !== false ? Math.random() : 0)
-              )
-      })]}, [])
+      .map(n => Array(n).fill(0))
+      .reduce((acc, value, i) => {
+        return [
+          ...acc,
+          value.map((_, j) => {
+            const weightsAndBias = ((weightsAndBiases || [])[i] || [])[j] || { weights: [] }
+            return i === 0
+              ? new InputNeuron(
+                  parameters[j],
+                  weightsAndBias.bias || (randomInit !== false ? Math.random() : 0)
+                )
+              : i === numberByLayer.length - 1
+              ? new OutputNeuron(
+                  acc[i - 1].map((neuron2: Neuron, k: number) => ({
+                    neuron: neuron2,
+                    number:
+                      (weightsAndBias.weights || [])[k] ||
+                      (randomInit !== false ? Math.random() : 0)
+                  })),
+                  weightsAndBias.bias || (randomInit !== false ? Math.random() : 0)
+                )
+              : new HiddenLayerNeuron(
+                  acc[i - 1].map((neuron2: Neuron, k: number) => ({
+                    neuron: neuron2,
+                    number:
+                      (weightsAndBias.weights || [])[k] ||
+                      (randomInit !== false ? Math.random() : 0)
+                  })),
+                  weightsAndBias.bias || (randomInit !== false ? Math.random() : 0)
+                )
+          })
+        ]
+      }, [])
     if (trainings && trainings.inputs.length) {
       const weightsAndBiases = this.trainAndGetGradientDescent(trainings).weightsAndBiases
       const trainedNetwork = this.apply(weightsAndBiases)
