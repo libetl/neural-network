@@ -726,6 +726,7 @@
           .replace(/([+*/-])/g, ' $1 ')
           .replace(/([\s]+)(cos|sin|tan|sqrt)\(/g, '$1Math.$2\(')
           .replace(/e\^([^\s]+)/g, 'Math.exp($1)')
+          .replace(/\(([^)]+)\)\^([^\s]+)/g, 'Math.pow($1, $2)')
           .replace(/([^\s]+)\^([^\s]+)/g, 'Math.pow($1, $2)')
           .replace(/\|([^|]+)\|/g, 'Math.abs($1)')
       }
