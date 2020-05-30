@@ -110,6 +110,7 @@
                   type="text"
                   id="theory"
                   onkeypress="currentNetwork[0] = undefined"
+                  onkeyup="updateTheory()"
                 />
                 <label class="mdl-textfield__label" for="theory">x^2 + y^2 &lt; 1</label>
               </div>
@@ -499,21 +500,27 @@
           return this
         }
 
-        redraw(activated, theory, remainingCost) {
+        redraw(activation, theory, remainingCost) {
           this.clearRect()
-          if (activated || theory) {
+          if (activation || theory) {
             for (let x = this.minX(); x <= this.maxX(); x += 0.1) {
               for (let y = this.minY(); y <= this.maxY(); y += 0.1) {
+                const indexX = Math.floor((x - this.minX()) * 10)
+                const indexY = Math.floor((y - this.minY()) * 10)
                 if (
-                  activated &&
-                  activated[Math.floor((x - this.minX()) * 10)][Math.floor((y - this.minY()) * 10)]
+                  activation &&
+                  activation[indexX][indexY] &&
+                  activation[indexX][indexY].activated
                 ) {
-                  this.drawCircle(x, y, 1, '#00FF00')
+                  const valueInHex = activation[indexX][indexY].confidence
+                    .toString(16)
+                    .padStart(2, '0')
+                  const invValueInHex = (256 - activation[indexX][indexY].confidence)
+                    .toString(16)
+                    .padStart(2, '0')
+                  this.drawCircle(x, y, 1, `#${invValueInHex}${valueInHex}00`)
                 }
-                if (
-                  theory &&
-                  theory[Math.floor((x - this.minX()) * 10)][Math.floor((y - this.minY()) * 10)]
-                ) {
+                if (theory && theory[indexX][indexY]) {
                   this.drawCircle(x, y, 0.1, '#0000FF')
                 }
               }
@@ -533,6 +540,20 @@
       const eraseCurrentNetwork = function (network) {
         currentNetwork[0] = undefined
       }.bind(this, currentNetwork)
+
+      const updateTheory = function (grid) {
+        const theoryAsJS = toJavascriptExpr(document.getElementById('theory').value)
+        let theoryFunction
+        try {
+          theoryFunction = eval(`({x,y}) => ${theoryAsJS.trim() || 'false'} ? [1] : [0]`)
+          document.getElementById('actionTraining').disabled = false
+          document.getElementById('actionOneTraining').disabled = false
+        } catch (e) {
+          document.getElementById('actionTraining').disabled = true
+          document.getElementById('actionOneTraining').disabled = true
+        }
+        grid.redraw(undefined, getTheoryBitmap(grid, theoryFunction))
+      }.bind(this, theGrid)
 
       const importWeightsAndBiasesFromFile = function (grid, network) {
         if (
@@ -577,7 +598,6 @@
               ? `${layersLength[2]} Neuron${layersLength[2] > 1 ? 's' : ''}`
               : 'None'
           network[0] = networkBuiltFromDOM().apply(weightsAndBiases)
-
           const theoryAsJS = toJavascriptExpr(theory)
           const theoryFunction = eval(`({x,y}) => ${theoryAsJS.trim() || 'false'} ? [1] : [0]`)
           grid.redraw(getActivationBitmap(grid, network[0]), getTheoryBitmap(grid, theoryFunction))
@@ -646,11 +666,11 @@
             theory,
             trainingResult: { remainingCost, remainingCostList, trainedNetwork: network }
           }) => {
-            const activated = getActivationBitmap(grid, network)
+            const activation = getActivationBitmap(grid, network)
             const theoryResult = getTheoryBitmap(grid, theory)
             whereToSave[0] = network
             document.getElementById('actionWeightsAndBiases').disabled = false
-            grid.redraw(activated, theoryResult, remainingCost)
+            grid.redraw(activation, theoryResult, remainingCost)
             document.body.style.cursor = 'pointer'
           }
         )
@@ -670,13 +690,16 @@
         return Array(Math.ceil((grid.maxX() - grid.minX()) * 10))
           .fill(Array(Math.ceil((grid.maxY() - grid.minY()) * 10)).fill())
           .map((row, i) =>
-            row.map(
-              (cell, j) =>
-                network.process({
-                  x: grid.minX() + i * 0.1,
-                  y: grid.minY() + j * 0.1
-                })[0] >= average
-            )
+            row.map((cell, j) => {
+              const value = network.process({
+                x: grid.minX() + i * 0.1,
+                y: grid.minY() + j * 0.1
+              })[0]
+              return {
+                activated: value >= average,
+                confidence: Math.min(255, Math.max(0, Math.floor(value * 256)))
+              }
+            })
           )
       }
 
@@ -720,7 +743,7 @@
               .map(e => ' ' + e + ' '),
             document.getElementById('layer1').value,
             document.getElementById('layer2').value,
-            document.getElementsByName('activation').value
+            document.getElementsByName('activation')[0].value
           )
         )
 
