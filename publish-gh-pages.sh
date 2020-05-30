@@ -8,3 +8,4 @@ git add -f network.js
 git commit -m "gh-pages"
 git push -u origin gh-pages -f
 git checkout -f master
+git restore publish-gh-pages.sh
