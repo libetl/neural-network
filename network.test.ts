@@ -1,6 +1,6 @@
 import { Network } from './network.ts'
 import { readDatabase } from './mixedNationalInstituteOfStandardsAndTechnologyReader.ts'
-
+/*
 Deno.test('should gives random results with not trained network', () => {
   const network = new Network({
     numberByLayer: [4, 4, 2],
@@ -106,13 +106,13 @@ Deno.test('should train and learn with a function', () => {
     ]
   })
 
-  const trainingResult = network.trainAndGetGradientDescent({
+  const gradientDescentResult = network.getGradientDescent({
     inputs,
     theory: ({ x, y }: { x: number; y: number }) =>
       Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [-4] : [15]
   })
 
-  const trainedNetwork = network.apply(trainingResult.weightsAndBiases)
+  const trainedNetwork = network.apply(gradientDescentResult.weightsAndBiases)
 
   console.log('results')
   ;[
@@ -149,7 +149,7 @@ Deno.test('loaded weights and biases', () => {
     ]
   })
 
-  /*console.log("results (true if coords are in a [1, 1] circle)");
+  console.log("results (true if coords are in a [1, 1] circle)");
   [
     { x: 0, y: 0 },
     { x: -0.2, y: 0.34 },
@@ -166,7 +166,7 @@ Deno.test('loaded weights and biases', () => {
     console.log(
       `${JSON.stringify(coords)} => ${network.process(coords)[0] > 0.5}`,
     )
-  );*/
+  );
 })
 
 Deno.test('loaded from intense training in UI (x^2 + y^2 < 1)', () => {
@@ -212,63 +212,6 @@ Deno.test('loaded from intense training in UI (x^2 + y^2 < 1)', () => {
     { x: -24, y: -6 },
     { x: 24, y: 24 }
   ].map(coords => console.log(`${JSON.stringify(coords)} => ${network.process(coords)[0]}`))
-})
-
-Deno.test('prepared network and trained network', () => {
-  const inputs = Array(100)
-    .fill(1)
-    .map(() => ({
-      x: Math.floor(Math.random() * 500 - 250) / 100,
-      y: Math.floor(Math.random() * 500 - 250) / 100
-    }))
-
-  const trainings = {
-    inputs,
-    theory: ({ x, y }: { x: number; y: number }) =>
-      Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [0, 1] : [1, 0]
-  }
-
-  const network0 = new Network({
-    name: 'Network 1',
-    numberByLayer: [3, 2],
-    parameters: [
-      ({ x, y }: { x: number; y: number }) => Math.abs(x),
-      ({ x, y }: { x: number; y: number }) => Math.abs(y),
-      ({ x, y }: { x: number; y: number }) => x * x + y * y
-    ]
-  })
-  const trainingResult = network0.trainAndGetGradientDescent(trainings)
-  const network1 = network0.apply(trainingResult.weightsAndBiases)
-
-  const network2 = new Network({
-    name: 'Network 2',
-    numberByLayer: [3, 2],
-    parameters: [
-      ({ x, y }: { x: number; y: number }) => Math.abs(x),
-      ({ x, y }: { x: number; y: number }) => Math.abs(y),
-      ({ x, y }: { x: number; y: number }) => x * x + y * y
-    ],
-    trainings
-  })
-  /*console.log("results");
-  [
-    { x: 0, y: 0 },
-    { x: -0.2, y: 0.34 },
-    { x: -0.002, y: 0.014 },
-    { x: -0.9, y: 0.4 },
-    { x: 0, y: 1 },
-    { x: 1, y: 0 },
-    { x: 2, y: 0 },
-    { x: 3, y: 3 },
-    { x: -40, y: -6 },
-    { x: 53, y: 53 },
-  ].map((coords) =>
-    console.log(
-      `${JSON.stringify(coords)} => network1 : ${
-        network1.process(coords)
-      }, network2: ${network2.process(coords)}`,
-    )
-  );*/
 })
 
 Deno.test('mixed national institute of standards and technology', async () => {
@@ -318,4 +261,30 @@ Deno.test('mixed national institute of standards and technology', async () => {
       return result
     }
   })
+})*/
+
+Deno.test('forward and backward propagation', () => {
+  const inputs = Array(100)
+    .fill(1)
+    .map(() => ({
+      x: Math.floor(Math.random() * 500 - 250) / 100,
+      y: Math.floor(Math.random() * 500 - 250) / 100
+    }))
+
+  const trainings = {
+    inputs,
+    theory: ({ x, y }: { x: number; y: number }) =>
+      Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [0] : [1]
+  }
+
+  const network = new Network({
+    name: 'Network',
+    numberByLayer: [2, 4, 1],
+    parameters: [
+      ({ x, y }: { x: number; y: number }) => x,
+      ({ x, y }: { x: number; y: number }) => y,
+    ]
+  })
+  const forwardAndBackwardPropagation = network.forwardAndBackwardPropagation(trainings)
+  console.log(JSON.stringify(forwardAndBackwardPropagation))
 })
