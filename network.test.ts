@@ -282,7 +282,7 @@ Deno.test('forward and backward propagation', () => {
     numberByLayer: [2, 4, 1],
     parameters: [
       ({ x, y }: { x: number; y: number }) => x,
-      ({ x, y }: { x: number; y: number }) => y,
+      ({ x, y }: { x: number; y: number }) => y
     ]
   })
   const forwardAndBackwardPropagation = network.forwardAndBackwardPropagation(trainings)
