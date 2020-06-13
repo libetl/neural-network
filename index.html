@@ -109,7 +109,7 @@
                   class="mdl-textfield__input"
                   type="text"
                   id="theory"
-                  onkeypress="currentNetwork[0] = undefined"
+                  onkeypress="eraseCurrentNetwork()"
                   onkeyup="updateTheory()"
                 />
                 <label class="mdl-textfield__label" for="theory">x^2 + y^2 &lt; 1</label>
@@ -246,7 +246,7 @@
                     type="text"
                     class="mdl-textfield__input"
                     id="layer1"
-                    onchange="currentNetwork[0] = undefined"
+                    onchange="eraseCurrentNetwork()"
                   />
                   <input type="hidden" value="" name="layer1" />
                   <label for="layer1" class="mdl-textfield__label">Hidden L1</label>
@@ -274,7 +274,7 @@
                     class="mdl-textfield__input"
                     id="layer2"
                     readonly
-                    onchange="currentNetwork[0] = undefined"
+                    onchange="eraseCurrentNetwork()"
                   />
                   <input type="hidden" value="" name="layer2" />
                   <label for="layer2" class="mdl-textfield__label">Hidden L2</label>
@@ -307,7 +307,7 @@
                     type="hidden"
                     value=""
                     name="activation"
-                    onchange="currentNetwork[0] = undefined"
+                    onchange="eraseCurrentNetwork()"
                   />
                   <label for="activation" class="mdl-textfield__label">Activation</label>
                   <ul for="activation" class="mdl-menu mdl-menu--bottom-left mdl-js-menu">
@@ -329,7 +329,7 @@
                     type="text"
                     id="parameter1"
                     value="x"
-                    onkeypress="currentNetwork[0] = undefined"
+                    onkeypress="eraseCurrentNetwork()"
                   />
                   <label class="mdl-textfield__label" for="theory">example : |x| or x^2</label>
                 </div>
@@ -345,7 +345,7 @@
                     type="text"
                     id="parameter2"
                     value="y"
-                    onkeypress="currentNetwork[0] = undefined"
+                    onkeypress="eraseCurrentNetwork()"
                   />
                   <label class="mdl-textfield__label" for="theory">example : |y| or y^2</label>
                 </div>
