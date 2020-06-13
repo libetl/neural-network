@@ -3,6 +3,7 @@ prettier --write *.html *.ts
 git add .
 git commit -m "prettier"
 git push
+deno bundle ui.ts | babel -f ui.js > ui.js
 deno bundle network.ts | babel -f network.js > network.js
 git branch -D gh-pages
 git checkout --orphan gh-pages

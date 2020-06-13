@@ -1,6 +1,6 @@
 import { Network } from './network.ts'
 import { readDatabase } from './mixedNationalInstituteOfStandardsAndTechnologyReader.ts'
-/*
+
 Deno.test('should gives random results with not trained network', () => {
   const network = new Network({
     numberByLayer: [4, 4, 2],
@@ -106,7 +106,7 @@ Deno.test('should train and learn with a function', () => {
     ]
   })
 
-  const gradientDescentResult = network.getGradientDescent({
+  const gradientDescentResult = network.trainWithGradientDescent({
     inputs,
     theory: ({ x, y }: { x: number; y: number }) =>
       Math.pow(x, 2) + Math.pow(y, 2) > 1 ? [-4] : [15]
@@ -149,8 +149,8 @@ Deno.test('loaded weights and biases', () => {
     ]
   })
 
-  console.log("results (true if coords are in a [1, 1] circle)");
-  [
+  console.log('results (true if coords are in a [1, 1] circle)')
+  ;[
     { x: 0, y: 0 },
     { x: -0.2, y: 0.34 },
     { x: -0.02, y: 0.01 },
@@ -161,12 +161,12 @@ Deno.test('loaded weights and biases', () => {
     { x: 3, y: 3 },
     { x: -5, y: 6 },
     { x: -24, y: -6 },
-    { x: 24, y: 24 },
-  ].map((coords) =>
+    { x: 24, y: 24 }
+  ].map(coords =>
     console.log(
-      `${JSON.stringify(coords)} => ${network.process(coords)[0] > 0.5}`,
+      `${JSON.stringify(coords)} => ${network.process(coords).slice(-1)[0][0].number > 0.5}`
     )
-  );
+  )
 })
 
 Deno.test('loaded from intense training in UI (x^2 + y^2 < 1)', () => {
@@ -261,7 +261,7 @@ Deno.test('mixed national institute of standards and technology', async () => {
       return result
     }
   })
-})*/
+})
 
 Deno.test('forward and backward propagation', () => {
   const inputs = Array(100)
@@ -285,6 +285,5 @@ Deno.test('forward and backward propagation', () => {
       ({ x, y }: { x: number; y: number }) => y
     ]
   })
-  const forwardAndBackwardPropagation = network.forwardAndBackwardPropagation(trainings)
-  console.log(JSON.stringify(forwardAndBackwardPropagation))
+  const trainedNetwork = network.trainWithBackwardPropagation(trainings)
 })
