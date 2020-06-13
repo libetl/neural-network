@@ -1,0 +1,379 @@
+<html class="mdl-js">
+  <head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.cyan-pink.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/getmdl-select/getmdl-select.min.css"
+    />
+    <script>
+      exports = {}
+    </script>
+    <script
+      defer="defer"
+      src="https://cdn.jsdelivr.net/npm/regenerator-runtime@0.12.1/runtime.js"
+    ></script>
+    <script defer="defer" src="https://code.getmdl.io/1.3.0/material.js"></script>
+    <script
+      defer="defer"
+      src="https://cdn.jsdelivr.net/npm/getmdl-select/getmdl-select.min.js"
+    ></script>
+    <script defer="defer" src="./ui.js"></script>
+    <style>
+      .training-card-wide.mdl-card {
+        width: 256px;
+      }
+
+      .training-card-wide > .mdl-card__title {
+        color: #fff;
+        height: 176px;
+        background: url('https://d33wubrfki0l68.cloudfront.net/f9911f02f59d5dea55b81849d258dafea6172bfb/c52a2/images/css/blend-modes/sky.jpg')
+          center / cover;
+        background-blend-mode: soft-light;
+      }
+
+      .training-card-wide > .mdl-card__menu {
+        color: #fff;
+      }
+
+      .parameters-card-wide.mdl-card {
+        width: 256px;
+      }
+
+      .parameters-card-wide > .mdl-card__title {
+        color: #fff;
+        height: 176px;
+        background: url('https://i.pinimg.com/originals/fc/df/27/fcdf27152f63402538b11a9c99a8f598.jpg')
+          center / cover;
+        background-blend-mode: soft-light;
+      }
+
+      .parameters-card-wide > .mdl-card__menu {
+        color: #fff;
+      }
+
+      .canvas-card-image.mdl-card {
+        width: 100%;
+        height: 100%;
+      }
+
+      .canvas-card-image > .mdl-card__actions {
+        height: 52px;
+        padding: 16px;
+        background: rgba(0, 0, 0, 0.2);
+      }
+
+      .canvas-card-image__filename {
+        color: #fff;
+        font-weight: bold;
+        font-size: 24px;
+        font-weight: 500;
+      }
+    </style>
+    <title>Neural Network</title>
+  </head>
+
+  <body>
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+      <header class="mdl-layout__header">
+        <div class="mdl-layout__header-row">
+          <img src="https://i.gifer.com/XDZT.gif" width="48" height="48" />
+          <span class="mdl-layout-title">Neural network</span>
+          <div class="mdl-layout-spacer"></div>
+          <nav class="mdl-navigation mdl-layout--large-screen-only"></nav>
+        </div>
+      </header>
+      <main
+        class="mdl-layout__content"
+        style="
+          display: flex;
+          flex-direction: row;
+          margin-left: 2%;
+          margin-top: 1%;
+          width: 96%;
+          height: 100%;
+        "
+      >
+        <div class="training-card-wide mdl-card mdl-shadow--2dp">
+          <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Train new model</h2>
+          </div>
+          <div class="mdl-card__supporting-text">
+            Before playing with your model, you should train it with a theory
+          </div>
+          <div class="mdl-grid">
+            <div class="mdl-cell mdl-cell--4-col" style="align-self: center;">Theory</div>
+            <div class="mdl-cell mdl-cell--6-col">
+              <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <input
+                  class="mdl-textfield__input"
+                  type="text"
+                  id="theory"
+                  onkeypress="eraseCurrentNetwork()"
+                  onkeyup="updateTheory()"
+                />
+                <label class="mdl-textfield__label" for="theory">x^2 + y^2 &lt; 1</label>
+              </div>
+            </div>
+            <div class="mdl-cell mdl-cell--4-col" style="align-self: center;">Training size</div>
+            <div class="mdl-cell mdl-cell--6-col">
+              <input
+                class="mdl-slider mdl-js-slider"
+                id="trainingSize"
+                type="range"
+                min="100"
+                max="10000"
+                value="500"
+                tabindex="0"
+              />
+            </div>
+            <div class="mdl-cell mdl-cell--4-col" style="align-self: center;">
+              Variables amplitude
+            </div>
+            <div class="mdl-cell mdl-cell--6-col">
+              <input
+                class="mdl-slider mdl-js-slider"
+                id="variablesAmplitude"
+                type="range"
+                min="1"
+                max="20"
+                value="5"
+                tabindex="0"
+              />
+            </div>
+            <div class="mdl-cell mdl-cell--1-col">&nbsp;</div>
+            <div class="mdl-cell mdl-cell--11-col" style="align-self: flex-end;">
+              <div class="mdl-grid">
+                <div class="mdl-cell mdl-cell--3-col">
+                  <button
+                    class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect"
+                    onclick="eraseCurrentNetwork()"
+                    id="actionEraseCurrentNetwork"
+                  >
+                    <i class="material-icons" id="actionIconHighlightOff">highlight_off</i>
+                  </button>
+                </div>
+                <div class="mdl-cell mdl-cell--3-col">
+                  <button
+                    class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored"
+                    onclick="continuousTraining()"
+                    id="actionTraining"
+                  >
+                    <i class="material-icons" id="actionIconRowing">rowing</i>
+                  </button>
+                </div>
+                <div class="mdl-cell mdl-cell--3-col">
+                  <button
+                    class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored"
+                    onclick="training()"
+                    id="actionOneTraining"
+                  >
+                    <i class="material-icons" id="actionIconTraining">model_training</i>
+                  </button>
+                </div>
+                <div class="mdl-cell mdl-cell--3-col">&nbsp;</div>
+                <div class="mdl-cell mdl-cell--4-col">
+                  <input
+                    type="file"
+                    style="display: none;"
+                    id="fileinput"
+                    onchange="importWeightsAndBiasesFromFile()"
+                  />
+                  <button
+                    class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"
+                    onclick="document.getElementById('fileinput').click()"
+                    id="actionImport"
+                  >
+                    import
+                  </button>
+                </div>
+                <div class="mdl-cell mdl-cell--3-col">
+                  <button
+                    class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"
+                    disabled="disabled"
+                    onclick="weightsAndBiases()"
+                    id="actionWeightsAndBiases"
+                  >
+                    weights&biases
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="flex-grow: 1;">
+          <div class="canvas-card-image mdl-card mdl-shadow--2dp">
+            <div
+              class="mdl-card__title mdl-card--expand"
+              style="padding: 0; margin: 0; border-bottom: 0;"
+            >
+              <canvas
+                id="canvas"
+                style="
+                  width: 100%;
+                  margin-bottom: -50px;
+                  padding-top: 50px;
+                  height: 100%;
+                  box-shadow: 0 0px 0px 0 rgba(0, 0, 0, 0);
+                "
+                class="mdl-shadow--2dp"
+              >
+              </canvas>
+            </div>
+            <div class="mdl-card__actions" style="backdrop-filter: blur(2px);">
+              <div class="mdl-card__supporting-text">
+                Blue is the value computed by the theory and green is the prediction by the model
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: row;">
+          <div class="parameters-card-wide mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+              <h2 class="mdl-card__title-text">Be more accurate</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+              Specify the parameters and hidden layers you want to take in consideration to train
+              the model
+            </div>
+            <div class="mdl-grid">
+              <div class="mdl-cell mdl-cell--5-col">
+                <div
+                  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label getmdl-select"
+                  style="margin-bottom: -20px; margin-top: -20px;"
+                >
+                  <input
+                    type="text"
+                    class="mdl-textfield__input"
+                    id="layer1"
+                    onchange="eraseCurrentNetwork()"
+                  />
+                  <input type="hidden" value="" name="layer1" />
+                  <label for="layer1" class="mdl-textfield__label">Hidden L1</label>
+                  <ul
+                    id="layer1Choices"
+                    for="layer1"
+                    class="mdl-menu mdl-menu--bottom-left mdl-js-menu"
+                  >
+                    <li class="mdl-menu__item" data-val="" data-selected="true">None</li>
+                    <li class="mdl-menu__item" data-val="1">1 Neuron</li>
+                    <li class="mdl-menu__item" data-val="2">2 Neurons</li>
+                    <li class="mdl-menu__item" data-val="3">3 Neurons</li>
+                    <li class="mdl-menu__item" data-val="4">4 Neurons</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="mdl-cell mdl-cell--5-col">
+                <div
+                  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label getmdl-select"
+                  style="margin-bottom: -20px; margin-top: -20px;"
+                >
+                  <input
+                    type="text"
+                    value=""
+                    class="mdl-textfield__input"
+                    id="layer2"
+                    readonly
+                    onchange="eraseCurrentNetwork()"
+                  />
+                  <input type="hidden" value="" name="layer2" />
+                  <label for="layer2" class="mdl-textfield__label">Hidden L2</label>
+                  <ul
+                    id="layer2Choices"
+                    for="layer2"
+                    class="mdl-menu mdl-menu--bottom-left mdl-js-menu"
+                  >
+                    <li class="mdl-menu__item" data-val="" data-selected="true">None</li>
+                    <li class="mdl-menu__item" data-val="1">1 Neuron</li>
+                    <li class="mdl-menu__item" data-val="2">2 Neurons</li>
+                    <li class="mdl-menu__item" data-val="3">3 Neurons</li>
+                    <li class="mdl-menu__item" data-val="4">4 Neurons</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="mdl-cell mdl-cell--10-col">
+                <div
+                  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label getmdl-select"
+                  style="margin-bottom: -20px; margin-top: -20px;"
+                >
+                  <input
+                    type="text"
+                    value=""
+                    class="mdl-textfield__input"
+                    id="activation"
+                    readonly
+                  />
+                  <input
+                    type="hidden"
+                    value=""
+                    name="activation"
+                    onchange="eraseCurrentNetwork()"
+                  />
+                  <label for="activation" class="mdl-textfield__label">Activation</label>
+                  <ul for="activation" class="mdl-menu mdl-menu--bottom-left mdl-js-menu">
+                    <li class="mdl-menu__item" data-val="sigmoid">Sigmoid</li>
+                    <li class="mdl-menu__item" data-val="tanh" data-selected="true">tanh</li>
+                    <li class="mdl-menu__item" data-val="rectifiedLinearUnit">ReLU</li>
+                    <li class="mdl-menu__item" data-val="exponentialLinearUnit">eLU</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="mdl-cell mdl-cell--4-col" style="align-self: top;">Param 1</div>
+              <div class="mdl-cell mdl-cell--6-col">
+                <div
+                  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+                  style="margin-bottom: -20px; margin-top: -20px;"
+                >
+                  <input
+                    class="mdl-textfield__input"
+                    type="text"
+                    id="parameter1"
+                    value="x"
+                    onkeypress="eraseCurrentNetwork()"
+                  />
+                  <label class="mdl-textfield__label" for="theory">example : |x| or x^2</label>
+                </div>
+              </div>
+              <div class="mdl-cell mdl-cell--4-col" style="align-self: top;">Param 2</div>
+              <div class="mdl-cell mdl-cell--6-col">
+                <div
+                  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+                  style="margin-bottom: -20px; margin-top: -20px;"
+                >
+                  <input
+                    class="mdl-textfield__input"
+                    type="text"
+                    id="parameter2"
+                    value="y"
+                    onkeypress="eraseCurrentNetwork()"
+                  />
+                  <label class="mdl-textfield__label" for="theory">example : |y| or y^2</label>
+                </div>
+              </div>
+              <div class="mdl-cell mdl-cell--4-col" style="align-self: top;">Param 3</div>
+              <div class="mdl-cell mdl-cell--6-col">
+                <div
+                  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+                  style="margin-bottom: -20px; margin-top: -20px;"
+                >
+                  <input class="mdl-textfield__input" type="text" id="parameter3" value="" />
+                  <label class="mdl-textfield__label" for="theory">example : x + y</label>
+                </div>
+              </div>
+              <div class="mdl-cell mdl-cell--4-col" style="align-self: top;">Param 4</div>
+              <div class="mdl-cell mdl-cell--6-col">
+                <div
+                  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+                  style="margin-bottom: -20px; margin-top: -20px;"
+                >
+                  <input class="mdl-textfield__input" type="text" id="parameter4" value="" />
+                  <label class="mdl-textfield__label" for="theory">example : x * y</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
