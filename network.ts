@@ -1,3 +1,5 @@
+import Neural from './typings.d.ts'
+
 const activationFunctions: { [name: string]: Neural.ActivationFunction } = {
   tanh: {
     apply: (number: number) => Math.tanh(number),
@@ -214,13 +216,13 @@ export class Network<T> implements Neural.Network<T> {
           inputs: trainingDataFromInput.inputs,
           theory: () => (trainingDataFromInput.expectedResults || [])[i++] || []
         }
-    const costs = inputs.map(input => {
+    const costs = inputs.map((input: T) => {
       const result = this.process(input).slice(-1)[0]
       const expectedResult = theory!(input)
       const cost = result.reduce((acc, r, i) => acc + Math.pow(r.number - expectedResult[i], 2), 0)
       return cost
     })
-    return { costs, average: costs.reduce((a, b) => a + b, 0) / inputs.length }
+    return { costs, average: costs.reduce((a: number, b: number) => a + b, 0) / inputs.length }
   }
 
   trainWithBackwardPropagation = (
@@ -230,7 +232,7 @@ export class Network<T> implements Neural.Network<T> {
       const activationDerivative = activationFunctions[this.activationFunction].derivative
       const trainingPartitions = this.partitionsOf(trainingDataFromInput)
       const partition = trainingPartitions[Math.floor(Math.random() * trainingPartitions.length)]
-      return partition.inputs.map(input => {
+      return partition.inputs.map((input: T) => {
         const resultTable = this.process(input)
         const result = resultTable.slice(-1)[0].map(r => r.number)
         const expectedResult = partition.theory!(input)
@@ -285,7 +287,7 @@ export class Network<T> implements Neural.Network<T> {
                         .number
                     const outputError = derivative.inputError * resultOfSourceNeuron
                     const linkDerivative = derivative.linksDerivatives.find(
-                      linkDerivative1 => linkDerivative1.neuron === weight.neuron
+                      (linkDerivative1: Neural.Link) => linkDerivative1.neuron === weight.neuron
                     )!
 
                     Object.assign(linkDerivative, {
@@ -332,7 +334,7 @@ export class Network<T> implements Neural.Network<T> {
                 : (learningRate * derivative.accumulatedFromInputError) /
                   derivative.numberOfAccumulatedErrors
 
-            derivative.linksDerivatives.forEach((linkDerivative, k) => {
+            derivative.linksDerivatives.forEach((linkDerivative: Neural.Link, k: number) => {
               const weight = (clone.neurons[i][j] as HiddenLayerNeuron).weights[k]
               const diff =
                 -(learningRate / linkDerivative.numberOfAccumulatedErrors) *
@@ -355,7 +357,9 @@ export class Network<T> implements Neural.Network<T> {
     }
 
     const trainedNetwork = applyDerivatives(
-      forwardAndBackwardPropagation(trainingDataFromInput).map(mapping => mapping.derivatives)
+      forwardAndBackwardPropagation(trainingDataFromInput).map(
+        (mapping: any) => mapping.derivatives
+      )
     )
 
     const remainingCosts = trainedNetwork.costSummaryOf(this.partitionsOf(trainingDataFromInput)[0])
@@ -499,7 +503,7 @@ export class Network<T> implements Neural.Network<T> {
   private partitionsOf = (trainingData: Neural.TrainingDataset<T>): Neural.TrainingDataset<T>[] => {
     if (!this.miniBatchLength) return [trainingData]
     const associatedInputsAndResults = trainingData.inputs
-      .map((input, i) => ({
+      .map((input: T, i: number) => ({
         input,
         expectedResult: (trainingData.expectedResults || [])[i++] || []
       }))
@@ -517,7 +521,7 @@ export class Network<T> implements Neural.Network<T> {
         return {
           inputs: associatedInputsAndResults
             .slice(first, last)
-            .map(association => association.input),
+            .map((association: any) => association.input),
           theory:
             trainingData.theory ||
             (() => (trainingData.expectedResults || []).slice(first, last)[counter++] || [])

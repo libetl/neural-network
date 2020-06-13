@@ -220,7 +220,12 @@ Deno.test('mixed national institute of standards and technology', async () => {
     numberByLayer: [784, 40, 15, 10],
     miniBatchLength: 10,
     randomInit: true,
-    afterEachNeuronTraining: (network, round, iteration, total) => {
+    afterEachNeuronTraining: (
+      network: Neural.Network<{ x: number; y: number }>,
+      round: number,
+      iteration: number,
+      total: number
+    ) => {
       const encoder = new TextEncoder()
       Deno.writeFileSync(
         'mnist.json',
