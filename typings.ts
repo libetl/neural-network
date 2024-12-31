@@ -1,5 +1,5 @@
-declare namespace Neural {
-  interface Network<T> {
+
+ export interface Network<T> {
     process: (input: T) => ProcessResult[][]
     costSummaryOf: (trainingDataFromInput: TrainingDataset<T>) => CostSummary
     trainWithBackwardPropagation: (trainingDataFromInput: TrainingDataset<T>) => TrainingResult<T>
@@ -11,66 +11,67 @@ declare namespace Neural {
     toString: () => string
   }
 
-  interface Neuron {}
+ export interface Neuron {}
 
-  interface SavedValue {
-    neuron: Neuron
-    number: number
+ export interface SavedValue {
+    neuron: Neuron;
+    number: number;
   }
 
-  type Link = SavedValue & { dead?: boolean }
-  type ProcessResult = SavedValue & { rawValue: number }
+ export type Link = SavedValue & { accumulatedError: number; numberOfAccumulatedErrors: number; dead?: boolean }
+ export type ProcessResult = SavedValue & { rawValue: number }
 
-  interface TrainingDataset<T> {
+ export interface TrainingDataset<T> {
     inputs: T[]
     expectedResults?: number[][]
     rounds?: number
     theory?: (input: T) => number[]
   }
 
-  interface CostSummary {
+ export interface CostSummary {
     costs: number[]
     average: number
   }
 
-  interface TrainingResult<T> {
+ export interface TrainingResult<T> {
     weightsAndBiases: WeightsAndBias[][]
     remainingCost: number
     remainingCostList: number[]
     trainedNetwork: Network<T>
   }
 
-  interface WeightsAndBias {
+ export interface WeightsAndBias {
     bias?: number
     weights?: number[]
   }
 
-  interface Derivatives {
+ export interface Derivatives {
     outputError: number
     inputError: number
     accumulatedFromInputError: number
     numberOfAccumulatedErrors: number
     linksDerivatives: {
-      neuron: Neuron
-      outputError: number
+      neuron: Neuron;
+      outputError: number;
+      number: number;
       accumulatedError: number
       numberOfAccumulatedErrors: number
     }[]
   }
 
-  type AfterEachNeuronTraining<T> = (
+  export type AfterEachNeuronTraining<T> = (
     network: Network<T>,
     round: number,
     iteration: number,
     total: number
   ) => void
 
-  type ActivationFunction = {
+  export type ActivationFunction = {
     apply: (x: number) => number
     derivative: (x: number) => number
   }
 
-  type ActivationFunctionName = keyof {
+  export type ActivationFunctionName = keyof {
     [name: string]: ActivationFunction
   }
-}
+  

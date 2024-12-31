@@ -18,7 +18,7 @@
       defer="defer"
       src="https://cdn.jsdelivr.net/npm/getmdl-select/getmdl-select.min.js"
     ></script>
-    <script defer="defer" src="./ui.js"></script>
+    <script defer="defer" src="./index.js"></script>
     <style>
       .training-card-wide.mdl-card {
         width: 256px;
@@ -109,8 +109,8 @@
                   class="mdl-textfield__input"
                   type="text"
                   id="theory"
-                  onkeypress="eraseCurrentNetwork()"
-                  onkeyup="updateTheory()"
+                  onkeypress="Ui.eraseCurrentNetwork()"
+                  onkeyup="Ui.updateTheory()"
                 />
                 <label class="mdl-textfield__label" for="theory">x^2 + y^2 &lt; 1</label>
               </div>
@@ -147,7 +147,7 @@
                 <div class="mdl-cell mdl-cell--3-col">
                   <button
                     class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect"
-                    onclick="eraseCurrentNetwork()"
+                    onclick="Ui.eraseCurrentNetwork()"
                     id="actionEraseCurrentNetwork"
                   >
                     <i class="material-icons" id="actionIconHighlightOff">highlight_off</i>
@@ -156,7 +156,7 @@
                 <div class="mdl-cell mdl-cell--3-col">
                   <button
                     class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored"
-                    onclick="continuousTraining()"
+                    onclick="Ui.continuousTraining()"
                     id="actionTraining"
                   >
                     <i class="material-icons" id="actionIconRowing">rowing</i>
@@ -165,7 +165,7 @@
                 <div class="mdl-cell mdl-cell--3-col">
                   <button
                     class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored"
-                    onclick="training()"
+                    onclick="Ui.training()"
                     id="actionOneTraining"
                   >
                     <i class="material-icons" id="actionIconTraining">model_training</i>
@@ -177,7 +177,7 @@
                     type="file"
                     style="display: none;"
                     id="fileinput"
-                    onchange="importWeightsAndBiasesFromFile()"
+                    onchange="Ui.importWeightsAndBiasesFromFile()"
                   />
                   <button
                     class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"
@@ -191,7 +191,7 @@
                   <button
                     class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"
                     disabled="disabled"
-                    onclick="weightsAndBiases()"
+                    onclick="Ui.weightsAndBiases()"
                     id="actionWeightsAndBiases"
                   >
                     weights&biases
@@ -246,7 +246,7 @@
                     type="text"
                     class="mdl-textfield__input"
                     id="layer1"
-                    onchange="eraseCurrentNetwork()"
+                    onchange="Ui.eraseCurrentNetwork()"
                   />
                   <input type="hidden" value="" name="layer1" />
                   <label for="layer1" class="mdl-textfield__label">Hidden L1</label>
@@ -274,7 +274,7 @@
                     class="mdl-textfield__input"
                     id="layer2"
                     readonly
-                    onchange="eraseCurrentNetwork()"
+                    onchange="Ui.eraseCurrentNetwork()"
                   />
                   <input type="hidden" value="" name="layer2" />
                   <label for="layer2" class="mdl-textfield__label">Hidden L2</label>
@@ -307,7 +307,7 @@
                     type="hidden"
                     value=""
                     name="activation"
-                    onchange="eraseCurrentNetwork()"
+                    onchange="Ui.eraseCurrentNetwork()"
                   />
                   <label for="activation" class="mdl-textfield__label">Activation</label>
                   <ul for="activation" class="mdl-menu mdl-menu--bottom-left mdl-js-menu">
@@ -329,7 +329,7 @@
                     type="text"
                     id="parameter1"
                     value="x"
-                    onkeypress="eraseCurrentNetwork()"
+                    onkeypress="Ui.eraseCurrentNetwork()"
                   />
                   <label class="mdl-textfield__label" for="theory">example : |x| or x^2</label>
                 </div>
@@ -345,7 +345,7 @@
                     type="text"
                     id="parameter2"
                     value="y"
-                    onkeypress="eraseCurrentNetwork()"
+                    onkeypress="Ui.eraseCurrentNetwork()"
                   />
                   <label class="mdl-textfield__label" for="theory">example : |y| or y^2</label>
                 </div>

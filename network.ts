@@ -1,4 +1,4 @@
-import Neural from './typings.d.ts'
+import * as Neural from './typings.ts'
 
 const activationFunctions: { [name: string]: Neural.ActivationFunction } = {
   tanh: {
@@ -251,6 +251,7 @@ export class Network<T> implements Neural.Network<T> {
                   : (this.neurons[i][j] as HiddenLayerNeuron).weights.map(weight => ({
                       neuron: weight.neuron,
                       outputError: 0,
+                      number: 0,
                       accumulatedError: 0,
                       numberOfAccumulatedErrors: 0
                     }))

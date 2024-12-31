@@ -1,5 +1,6 @@
 import { Network } from './network.ts'
-import Neural from './typings.d.ts'
+import * as Neural from './typings.ts'
+import { train_with_gradient_descent } from './rust/pkg/rust.js'
 
 type Activation = { activated: boolean; confidence: number }[][]
 type Coords = { x: number; y: number }
@@ -241,7 +242,7 @@ export const weightsAndBiases = function (network: (Neural.Network<Coords> | und
     .filter(v => v)
     .map(e => ' ' + e + ' ')
   const theory = ' ' + doc.getElementById('theory').value + ' '
-  const layersLength = network[0]!.neurons.map((l: Neural.Neuron[]) => l.length)
+  const layersLength = network[0]!.getNeurons().map((l: Neural.Neuron[]) => l.length)
   const link = doc.createElement('a')
   link.style.display = 'none'
   link.href = `data:application/json,${JSON.stringify({
@@ -287,13 +288,16 @@ export const training = function (grid: Grid, whereToSave: (Neural.Network<Coord
   ).then((value: any) => {
     const {
       theory,
-      trainedNetwork: network,
+      trainedNetwork,
+      weightsAndBiases,
       remainingCost
     }: {
       theory: (coords: Coords) => number[]
       trainedNetwork: Neural.Network<Coords>
+      weightsAndBiases: Neural.WeightsAndBias[][]
       remainingCost: number
     } = value
+    const network = (currentNetwork[0] ?? networkBuiltFromDOM()).apply(weightsAndBiases)
     const activation = getActivationBitmap(grid, network)
     const theoryResult = getTheoryBitmap(grid, theory)
     whereToSave[0] = network
@@ -341,10 +345,10 @@ function getTheoryBitmap(grid: Grid, theory: (coords: Coords) => number[]) {
     .map((row, i) =>
       row.map(
         (cell: any, j: number) =>
-          theory({
+          theory?.({
             x: grid.minX() + i * 0.1,
             y: grid.minY() + j * 0.1
-          })[0] >= 1
+          })?.[0] ?? 0 >= 1
       )
     )
 }
@@ -423,12 +427,31 @@ const train = function (
     .sort(() => Math.random() - 0.5)
   return new Promise(resolve => {
     const network = (currentNetwork[0] || networkBuiltFromDOM) as Neural.Network<Coords>
-    resolve({
+
+    resolve({...JSON.parse(train_with_gradient_descent([
+      doc.getElementById('parameter1').value,
+      doc.getElementById('parameter2').value,
+      doc.getElementById('parameter3').value,
+      doc.getElementById('parameter4').value,
+    ].filter(Boolean),
+      Uint32Array.from([(isNaN(parseInt(doc.getElementById('layer1').value)) ? 0 : parseInt(doc.getElementById('layer1').value)),
+      (isNaN(parseInt(doc.getElementById('layer2').value)) ? 0 : parseInt(doc.getElementById('layer2').value))]
+        .filter(Boolean)),
+      doc.getElementsByName('activation')[0].value,
+      parseInt(doc.getElementById('trainingSize').value),
+      [doc.getElementById('theory').value],
+      10,
+      1,
+      Float64Array.from(currentNetwork[0]?.getWeightsAndBiases?.()?.flat?.()?.map(n => n.weights)?.flat?.() ?? []),
+      Float64Array.from(currentNetwork[0]?.getWeightsAndBiases?.()?.flat?.()?.map(n => n.bias) ?? []),
+    )), theory})
+
+    /*resolve({
       ...network.trainWithGradientDescent({
         inputs,
         theory
       }),
       theory
-    })
+    })*/
   })
 }.bind(this, currentNetwork)

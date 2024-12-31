@@ -3,8 +3,9 @@ prettier --write *.html *.ts
 git add .
 git commit -m "prettier"
 git push
-deno bundle ui.ts | babel -f ui.js > ui.js
-deno bundle network.ts | babel -f network.js > network.js
+esbuild --bundle network.ts > network.js
+esbuild --bundle ui.ts > ui.js
+esbuild --bundle index.ts > index.js
 git branch -D gh-pages
 git checkout --orphan gh-pages
 git rm --cached -r .
